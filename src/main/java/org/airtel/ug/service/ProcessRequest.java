@@ -26,50 +26,36 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
 
     private static final String OCS_OPERATOR_ID = "MicroBundle";
 
-    private String msisdn;
-    private String sessionId;
-    private String sourceIp;
-    private String imsi;
+    private final String msisdn;
+    private final String sessionId;
+    private final String sourceIp;
+    private final String imsi;
     private String pin = null;
-    private int optionId;
+    private final int optionId;
 
     public ProcessRequest(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
 
-        try {
+        this.msisdn = msisdn;
+        this.sessionId = sessionId;
+        this.optionId = optionId;
+        this.sourceIp = sourceIp;
+        this.imsi = imsi;
+        this.pin = pin;
 
-            this.msisdn = msisdn;
-            this.sessionId = sessionId;
-            this.optionId = optionId;
-            this.sourceIp = sourceIp;
-            this.imsi = imsi;
-            this.pin = pin;
+        subscriptionInfo.setChannel("USSD");
 
-            //set the processing node
-            subscriptionInfo.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
-            subscriptionInfo.setChannel("USSD");
-
-        } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, ex.getLocalizedMessage(), ex);
-        }
     }
 
     public ProcessRequest(String msisdn, String sessionId, int optionId, String sourceIp, String imsi) {
 
-        try {
+        this.msisdn = msisdn;
+        this.sessionId = sessionId;
+        this.optionId = optionId;
+        this.sourceIp = sourceIp;
+        this.imsi = imsi;
 
-            this.msisdn = msisdn;
-            this.sessionId = sessionId;
-            this.optionId = optionId;
-            this.sourceIp = sourceIp;
-            this.imsi = imsi;
+        subscriptionInfo.setChannel("USSD");
 
-            //set the processing node
-            subscriptionInfo.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
-            subscriptionInfo.setChannel("USSD");
-
-        } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, ex.getLocalizedMessage(), ex);
-        }
     }
 
     @Override
@@ -124,7 +110,7 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
 
                     SubscribeAppendantProductRequestProduct[] productList = {prod1};
 
-                    ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID+"_ATL_MN").getResultHeader();
+                    ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN").getResultHeader();
 
                     LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
                     LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
@@ -202,5 +188,4 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
         hzClient.clearSessionData(msisdn);
 
     }
-
 }//end of class

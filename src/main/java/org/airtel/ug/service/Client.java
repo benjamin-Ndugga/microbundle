@@ -21,7 +21,7 @@ import org.airtel.ug.util.MenuItem;
 import org.airtel.ug.util.MyPakalastBundleException;
 
 /**
- * 10-Dec-2018 written in support bassed on the ARPU for voice subscribers
+ * 10-Dec-2018 written in support based on the ARPU for voice subscribers
  *
  * @author benjamin
  */

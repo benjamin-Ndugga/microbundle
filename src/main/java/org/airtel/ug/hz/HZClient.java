@@ -17,21 +17,17 @@ import javax.naming.NamingException;
  */
 public class HZClient {
 
-    private static final Logger LOGGER = Logger.getLogger(HZClient.class.getName());
+    private static final Logger LOGGER = Logger.getLogger("MYPAKALAST_HZ");
     private static final int DEFAULT_BAND = 6;
+    private static final String BILLING_OPTION_MAP_NAME = "pnp.billingoption",
+            MY_PAKALAST_MAP_NAME = "com.airtel.ug.micro", OPTION_ID_MAP_NAME = "pnp.optionid";
 
-//    static {
-//
-//        java.util.logging.ConsoleHandler ch = new java.util.logging.ConsoleHandler();
-//
-//        ch.setLevel(java.util.logging.Level.ALL);
-//
-//        LOGGER.addHandler(ch);
-//
-//        LOGGER.setLevel(java.util.logging.Level.ALL);
-//
-//    }
-
+    /**
+     * returns the band attached to a subscriber
+     *
+     * @param msisdn subscriber's number
+     * @return
+     */
     public Integer getBand(String msisdn) {
 
         HazelcastInstance client = null;
@@ -41,11 +37,11 @@ public class HZClient {
             client = connectToHzInstance();
 
             //get the map for imsis
-            IMap<String, Integer> map = client.getMap("com.airtel.ug.micro");
+            IMap<String, Integer> map = client.getMap(MY_PAKALAST_MAP_NAME);
 
             Integer band_found = map.get(msisdn);
 
-            LOGGER.log(Level.INFO, "BAND-FOUND FROM HZ-INSTANCE {0} | {1}", new Object[]{band_found, msisdn});
+            LOGGER.log(Level.INFO, "BAND-FOUND-FROM-HZ-INSTANCE {0} | {1}", new Object[]{band_found, msisdn});
 
             if (band_found == null) {
 
@@ -70,6 +66,15 @@ public class HZClient {
         }
     }
 
+    /**
+     * return the option id selected by the subscriber
+     *
+     * @param msisdn the requesting subscriber's number
+     * @return
+     * @throws NullPointerException
+     * @throws IllegalStateException
+     * @throws NamingException
+     */
     public Integer getOptionId(String msisdn) throws NullPointerException, IllegalStateException, NamingException {
         HazelcastInstance client = null;
         try {
@@ -77,7 +82,7 @@ public class HZClient {
             client = connectToHzInstance();
 
             //get the option id
-            IMap<String, Integer> map = client.getMap("pnp.optionid");
+            IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
 
             return map.get(msisdn);
 
@@ -88,6 +93,15 @@ public class HZClient {
         }
     }
 
+    /**
+     * saves the option id selected by the subscriber
+     *
+     * @param msisdn the subscriber that has selected this option id
+     * @param optionId the option id selected
+     * @throws NamingException
+     * @throws NullPointerException
+     * @throws IllegalStateException
+     */
     public void saveOptionId(String msisdn, int optionId) throws NamingException, NullPointerException, IllegalStateException {
         HazelcastInstance client = null;
         try {
@@ -95,7 +109,7 @@ public class HZClient {
             client = connectToHzInstance();
 
             //get the option id
-            IMap<String, Integer> map = client.getMap("pnp.optionid");
+            IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
 
             map.put(msisdn, optionId);
 
@@ -106,6 +120,14 @@ public class HZClient {
         }
     }
 
+    /**
+     * fetched the saved billing option for the subscriber
+     *
+     * @param msisdn the subscriber that selected the billing option
+     * @return
+     * @throws IllegalStateException
+     * @throws NamingException
+     */
     public Integer getBillingOption(String msisdn) throws IllegalStateException, NamingException {
 
         HazelcastInstance client = null;
@@ -114,7 +136,7 @@ public class HZClient {
             client = connectToHzInstance();
 
             //get the billing option
-            IMap<String, Integer> map = client.getMap("pnp.billingoption");
+            IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
 
             return map.get(msisdn);
 
@@ -125,13 +147,21 @@ public class HZClient {
         }
     }
 
+    /**
+     * saves the billing option that's been selected
+     *
+     * @param msisdn the subscriber's number that has saved the billing option
+     * @param billingOption the billing option that has been selected
+     * @throws IllegalStateException
+     * @throws NamingException
+     */
     public void saveBillingOption(String msisdn, String billingOption) throws IllegalStateException, NamingException {
         HazelcastInstance client = null;
         try {
 
             client = connectToHzInstance();
             //get the option id
-            IMap<String, Integer> map = client.getMap("pnp.billingoption");
+            IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
 
             map.put(msisdn, Integer.parseInt(billingOption));
 
@@ -142,6 +172,11 @@ public class HZClient {
         }
     }
 
+    /**
+     * clears the session data for the subscriber
+     *
+     * @param msisdn
+     */
     public void clearSessionData(String msisdn) {
 
         LOGGER.log(Level.INFO, "CLEAR_SESSION_DATA | {0}", msisdn);
@@ -152,10 +187,10 @@ public class HZClient {
             client = connectToHzInstance();
 
             //get the option id
-            IMap<String, Integer> mapOptionId = client.getMap("pnp.optionid");
+            IMap<String, Integer> mapOptionId = client.getMap(OPTION_ID_MAP_NAME);
             mapOptionId.remove(msisdn);
 
-            IMap<String, Integer> mapBillingOption = client.getMap("pnp.billingoption");
+            IMap<String, Integer> mapBillingOption = client.getMap(BILLING_OPTION_MAP_NAME);
             mapBillingOption.remove(msisdn);
 
         } catch (IllegalStateException | NamingException ex) {
@@ -165,9 +200,15 @@ public class HZClient {
                 client.shutdown();
             }
         }
-
     }
 
+    /**
+     * Creates a smart client that connects to the HZ-Instance
+     *
+     * @return
+     * @throws IllegalStateException
+     * @throws NamingException
+     */
     private HazelcastInstance connectToHzInstance() throws IllegalStateException, NamingException {
 
         InitialContext ic = new InitialContext();

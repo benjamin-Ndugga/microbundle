@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.airtel.ug.util;
 
 import java.io.BufferedReader;
@@ -13,6 +8,7 @@ import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -39,6 +35,16 @@ public class ProcessUtil {
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
 
     public final SubscriptionLog subscriptionInfo = new SubscriptionLog();
+
+    public ProcessUtil() {
+
+        try {
+            //set the processing node
+            subscriptionInfo.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
 
     public final void logRequest() {
         Connection connection = null;
@@ -127,6 +133,17 @@ public class ProcessUtil {
 
     }
 
+    /**
+     *
+     * @param msisdn
+     * @param menuItem
+     * @param pin
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws NamingException
+     */
     public final MobiquityReponseHandler debitMobiquityAccount(String msisdn, MenuItem menuItem, String pin) throws MalformedURLException, IOException, ParserConfigurationException, NamingException {
 
         OutputStream output = null;
@@ -249,4 +266,96 @@ public class ProcessUtil {
         return externalId;
     }
 
+    /**
+     *
+     * @param externalId
+     * @param msisdn
+     * @return
+     * @throws java.net.MalformedURLException
+     * @throws javax.xml.parsers.ParserConfigurationException
+     * @throws org.xml.sax.SAXException
+     */
+    public MobiquityReponseHandler inquireTransactionStatusOfExtId(String externalId, String msisdn) throws MalformedURLException, IOException, ParserConfigurationException, SAXException, NamingException {
+
+        OutputStream output = null;
+        BufferedReader reader = null;
+        InitialContext ic = null;
+
+        try {
+
+            ic = new InitialContext();
+
+            String AM_IP_PORT = (String) ic.lookup("resource/am/socket");
+            String MBQT_USERNAME = (String) ic.lookup("resource/am/user");
+            String MBQT_PASSWORD = (String) ic.lookup("resource/am/pass");
+
+            String request = "<COMMAND>\n"
+                    + "    <TYPE>TXNEQREQ</TYPE>\n"
+                    + "    <serviceType>TXNEQREQ</serviceType>\n"
+                    + "    <interfaceId>TXNCORE</interfaceId>\n"
+                    + "    <IS_TRANS_UNIQUE_CHECK_REQUIRED>Y</IS_TRANS_UNIQUE_CHECK_REQUIRED>\n"
+                    + "    <EXTTRID>" + externalId + "</EXTTRID>\n"
+                    + "    <USERNAME>" + MBQT_USERNAME + "</USERNAME>\n"
+                    + "    <PASSWORD>" + MBQT_PASSWORD + "</PASSWORD>\n"
+                    + "</COMMAND>";
+
+            //String url = "http://172.27.77.135:9192/services/uvc";
+            String url = AM_IP_PORT;
+
+            String charset = "UTF-8";
+
+            URLConnection connection = new URL(url).openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Accept-Charset", charset);
+            connection.setRequestProperty("Content-Type", "text/xml");
+
+            output = connection.getOutputStream();
+            output.write(request.getBytes(charset));
+            output.flush();
+
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+            String inputLine;
+            StringBuilder xmlresponse = new StringBuilder();
+
+            while ((inputLine = reader.readLine()) != null) {
+                xmlresponse.append(inputLine);
+            }
+
+            LOGGER.log(Level.INFO, "AM_RESPONSE: {0}", xmlresponse.toString() + " | " + msisdn);
+
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+
+            MobiquityReponseHandler mobiquityReponseHandler = new MobiquityReponseHandler();
+            saxParser.parse((new InputSource(new StringReader(xmlresponse.toString()))), mobiquityReponseHandler);
+
+            LOGGER.log(Level.INFO, "AM_RESPONSE_TXNSTATUS: {0}", mobiquityReponseHandler.getTxnstatus() + " | " + msisdn);
+            LOGGER.log(Level.INFO, "AM_RESPONSE_MESSAGE: {0}", mobiquityReponseHandler.getMessage() + " | " + msisdn);
+            LOGGER.log(Level.INFO, "AM_RESPONSE_TXID: {0}", mobiquityReponseHandler.getTxnid() + " | " + msisdn);
+
+            subscriptionInfo.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
+            subscriptionInfo.setMobiquity_desc(mobiquityReponseHandler.getMessage());
+            subscriptionInfo.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
+
+            return mobiquityReponseHandler;
+        } finally {
+            try {
+                if (output != null) {
+                    output.close();
+                }
+
+                if (reader != null) {
+                    reader.close();
+                }
+
+                if (ic != null) {
+                    ic.close();
+                }
+
+            } catch (IOException ex) {
+                LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            }
+        }
+    }
 }
