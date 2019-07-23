@@ -1,4 +1,4 @@
-package org.airtel.ug.service;
+package org.airtel.ug.mypk.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,9 +18,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import org.airtel.ug.hz.HZClient;
-import org.airtel.ug.util.MyPakalastBundleException;
-import org.airtel.ug.util.MenuHandler;
-import org.airtel.ug.util.MenuItem;
+import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.util.MenuHandler;
+import org.airtel.ug.mypk.util.MenuItem;
 
 /**
  *
@@ -195,7 +195,7 @@ public class RestfulClient {
 
                 responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                new Thread(new ProcessRequest(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
 
                 return responseTxt;
 
@@ -383,7 +383,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new ProcessRequest(MSISDN, SESSIONID, optionId, src, IMSI)).start();
+                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI)).start();
 
                     return responseTxt;
 
@@ -395,7 +395,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new ProcessRequest(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
 
                     return responseTxt;
                 }

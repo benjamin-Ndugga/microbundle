@@ -1,4 +1,4 @@
-package org.airtel.ug.util;
+package org.airtel.ug.mypk.util;
 
 import java.io.Serializable;
 
@@ -6,7 +6,7 @@ import java.io.Serializable;
  *
  * @author benjamin
  */
-public class SubscriptionLog implements Serializable {
+public class RequestLog implements Serializable {
 
     private static final long serialVersionUID = 20181210L;
 

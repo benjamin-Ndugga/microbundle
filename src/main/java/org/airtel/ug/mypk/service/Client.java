@@ -1,31 +1,38 @@
-package org.ibm.micro;
+package org.airtel.ug.mypk.service;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.ibm.hz.HZClient;
-import org.ibm.ussd.MenuHandler;
-import org.ibm.ussd.MicroBundleMenuItem;
-import org.ibm.ussd.MicroBundleException;
+import org.airtel.ug.hz.HZClient;
+import org.airtel.ug.mypk.util.MenuHandler;
+import org.airtel.ug.mypk.util.MenuItem;
+import org.airtel.ug.mypk.util.MyPakalastBundleException;
 
 /**
+ * 10-Dec-2018 written in support based on the ARPU for voice subscribers
  *
  * @author benjamin
  */
+@WebServlet(urlPatterns = "/Client")
 public class Client extends HttpServlet {
 
-    private static final Logger LOGGER = Logger.getLogger("MICRO_BUNDLE_REQ");
+    private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
+
+    @Resource(lookup = "concurrent/mypakalast")
+    private ManagedExecutorService mes;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -73,9 +80,11 @@ public class Client extends HttpServlet {
                 return;
             }
 
-            LOGGER.log(Level.INFO, "MICROBUNDLE_REQ SESSION_ID {0} INPUT {1} IMSI {2} | {3}", new Object[]{SESSIONID, INPUT, IMSI, MSISDN});
+            LOGGER.log(Level.INFO, "SESSION_ID {0} | {1}", new Object[]{SESSIONID, MSISDN});
+            LOGGER.log(Level.INFO, "INPUT {0} | {1}", new Object[]{INPUT, MSISDN});
+            LOGGER.log(Level.INFO, "IMSI {0} | {1}", new Object[]{IMSI, MSISDN});
 
-            ArrayList<MicroBundleMenuItem> menu = null;
+            ArrayList<MenuItem> menu;
 
             //for first time freeflow control request flash a Menu
             if (TYPE.equals("1")) {
@@ -85,7 +94,6 @@ public class Client extends HttpServlet {
                 LOGGER.log(Level.INFO, "LOOKUP_CUSTOMER BAND | {0}", MSISDN);
 
                 //get the band for this customer
-                //int band_id = DataBaseEngine.getBand(MSISDN);
                 int band_id = hzClient.getBand(MSISDN);
 
                 LOGGER.log(Level.INFO, "BAND_ID FOUND {0} | {1}", new Object[]{band_id, MSISDN});
@@ -94,12 +102,10 @@ public class Client extends HttpServlet {
 
                 LOGGER.log(Level.INFO, "BUILDING_MENU | {0}", MSISDN);
 
-                out.println("MY PAKALAST ");
-                out.println("------------");
+                out.println("MYPAKALAST");
+                out.println("---------------");
 
-                for (MicroBundleMenuItem menuItem : menu) {
-                    out.println(menuItem);
-                }
+                menu.forEach(out::println);
 
                 LOGGER.log(Level.INFO, "DISPLAY_MENU | {0}", MSISDN);
 
@@ -117,13 +123,13 @@ public class Client extends HttpServlet {
 
                     LOGGER.log(Level.INFO, "PROMPT_BILLING_OPTION | {0}", MSISDN);
 
-                    hzClient.saveOptionId(MSISDN, INPUT);
+                    hzClient.saveOptionId(MSISDN, Integer.parseInt(INPUT));
 
                     response.setHeader("Cont", "FC");
 
                     out.println("Please select billing option:");
-                    out.println("1.Airtime.");
-                    out.println("2.Airtel Money.");
+                    out.println("1.Airtel Money.");
+                    out.println("2.Airtime.");
 
                     return;
                 }
@@ -143,18 +149,18 @@ public class Client extends HttpServlet {
 
                     LOGGER.log(Level.INFO, "PROMPT_PIN | {0}", MSISDN);
 
-                    //if the billingOption sent throught the INPUT is 2 then prompt for the PIN 
-                    if (INPUT.equals("2")) {
+                    //if the billingOption sent throught the INPUT is 1 then prompt for the PIN 
+                    if (INPUT.equals("1")) {
 
                         response.setHeader("Cont", "FC");
 
-                        out.println("Please Ener PIN:");
+                        out.println("Please Enter PIN:");
 
                         return;
                     } else {
 
-                        //set the billingoption to 1
-                        billingOption = 1;
+                        //set the billingoption to 2
+                        billingOption = 2;
 
                     }
                 }
@@ -168,7 +174,7 @@ public class Client extends HttpServlet {
 
                 LOGGER.log(Level.INFO, "REQUEST_SENT_FROM {0} | {1}", new Object[]{src, MSISDN});
 
-                if (billingOption == 1) {
+                if (billingOption == 2) {
                     //proceed to process Airtime Request
 
                     response.setHeader("Cont", "FB");
@@ -177,7 +183,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for confirmation SMS.");
 
-                    new Thread(new ProcessRequest(MSISDN, SESSIONID, optionId, src, IMSI)).start();
+                    mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -187,10 +193,18 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for confirmation SMS.");
 
-                    new Thread(new ProcessRequest(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                    mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
-        } catch (MicroBundleException ex) {
+        } catch (NumberFormatException ex) {
+
+            response.setHeader("Cont", "FB");
+
+            out.println("Invalid input, Please try again.");
+
+            hzClient.clearSessionData(MSISDN);
+
+        } catch (MyPakalastBundleException ex) {
 
             response.setHeader("Cont", "FB");
 
@@ -198,7 +212,7 @@ public class Client extends HttpServlet {
 
             hzClient.clearSessionData(MSISDN);
 
-        } catch (IllegalStateException | ParseException | IndexOutOfBoundsException | NullPointerException | NumberFormatException | NamingException ex) {
+        } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NamingException ex) {
 
             response.setHeader("Cont", "FB");
 
@@ -210,6 +224,14 @@ public class Client extends HttpServlet {
 
         } finally {
             out.close();
+
+            if (ic != null) {
+                try {
+                    ic.close();
+                } catch (NamingException ex) {
+                    LOGGER.log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }//end of process request
 

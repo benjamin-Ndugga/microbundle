@@ -1,6 +1,6 @@
-package org.airtel.ug.service;
+package org.airtel.ug.mypk.service;
 
-import org.airtel.ug.util.SMSClient;
+import org.airtel.ug.mypk.util.SMSClient;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
@@ -10,21 +10,19 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.rpc.ServiceException;
-import org.airtel.ug.am.MobiquityReponseHandler;
+import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.airtel.ug.hz.HZClient;
-import org.airtel.ug.util.MenuHandler;
-import org.airtel.ug.util.MenuItem;
-import org.airtel.ug.util.MyPakalastBundleException;
-import org.airtel.ug.util.ProcessUtil;
+import org.airtel.ug.mypk.util.MenuHandler;
+import org.airtel.ug.mypk.util.MenuItem;
+import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.util.MicroBundleProcessorUtil;
 import org.ibm.ws.OCSWebMethods;
 
 /**
  *
  * @author benjamin
  */
-public class ProcessRequest extends ProcessUtil implements Runnable {
-
-    private static final String OCS_OPERATOR_ID = "MicroBundle";
+public class RequestProcessor extends MicroBundleProcessorUtil implements Runnable {
 
     private final String msisdn;
     private final String sessionId;
@@ -33,7 +31,9 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
     private String pin = null;
     private final int optionId;
 
-    public ProcessRequest(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
+    public RequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
+
+        super();
 
         this.msisdn = msisdn;
         this.sessionId = sessionId;
@@ -42,11 +42,13 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
         this.imsi = imsi;
         this.pin = pin;
 
-        subscriptionInfo.setChannel("USSD");
+        requestLog.setChannel("USSD");
 
     }
 
-    public ProcessRequest(String msisdn, String sessionId, int optionId, String sourceIp, String imsi) {
+    public RequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi) {
+
+        super();
 
         this.msisdn = msisdn;
         this.sessionId = sessionId;
@@ -54,51 +56,46 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
         this.sourceIp = sourceIp;
         this.imsi = imsi;
 
-        subscriptionInfo.setChannel("USSD");
+        requestLog.setChannel("USSD");
 
     }
 
     @Override
     public void run() {
 
-        InitialContext ic = null;
         HZClient hzClient = new HZClient();
 
         try {
 
-            ic = new InitialContext();
-            String ip = (String) ic.lookup("resource/ocs/ip");
-            String port = (String) ic.lookup("resource/ocs/port");
+            OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
 
-            OCSWebMethods ocs = new OCSWebMethods(ip, port);
-
-            subscriptionInfo.setMsisdn(msisdn);
-            subscriptionInfo.setSessionid(sessionId);
-            subscriptionInfo.setOptionId(optionId);
-            subscriptionInfo.setRequestIp(sourceIp);
-            subscriptionInfo.setImsi(imsi);
+            requestLog.setMsisdn(msisdn);
+            requestLog.setSessionid(sessionId);
+            requestLog.setOptionId(optionId);
+            requestLog.setRequestIp(sourceIp);
+            requestLog.setImsi(imsi);
 
             LOGGER.log(Level.INFO, "LOOKUP_CUSTOMER_BAND | {0}", msisdn);
 
             //get the band for this customer
             int band_id = hzClient.getBand(msisdn);
 
-            subscriptionInfo.setBand_id(band_id);
+            requestLog.setBand_id(band_id);
 
             LOGGER.log(Level.INFO, "LOOKUP_MENU_ID_VALUE {0} | {1}", new Object[]{optionId, msisdn});
 
             MenuItem menuItem = new MenuHandler().getMenuItem(band_id, optionId);
 
-            subscriptionInfo.setOcsProdID(menuItem.getOcsProdId());
-            subscriptionInfo.setAmProdId(menuItem.getAmProdId());
-            subscriptionInfo.setPrice(menuItem.getPrice());
+            requestLog.setOcsProdID(menuItem.getOcsProdId());
+            requestLog.setAmProdId(menuItem.getAmProdId());
+            requestLog.setPrice(menuItem.getPrice());
 
             LOGGER.log(Level.INFO, "SELECTED_MENU_ITEM {0} | {1}", new Object[]{menuItem, msisdn});
 
             if (pin != null) {
 
                 //send charge on Airtel Money
-                MobiquityReponseHandler mbqtResp = debitMobiquityAccount(msisdn.substring(3), menuItem, this.pin);
+                MobiquityReponseHandler mbqtResp = debitMobiquityAccount(msisdn.substring(3), menuItem, pin);
 
                 if (mbqtResp.getTxnstatus().equals(MOBIQUITY_SUCCESS_CODE)) {
 
@@ -115,12 +112,12 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
                     LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
                     LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
 
-                    subscriptionInfo.setOcsResp(resultHeader.getResultCode());
-                    subscriptionInfo.setOcsDesc(resultHeader.getResultDesc());
-                    subscriptionInfo.setRequestSerial(ocs.getSerialNo());
+                    requestLog.setOcsResp(resultHeader.getResultCode());
+                    requestLog.setOcsDesc(resultHeader.getResultDesc());
+                    requestLog.setRequestSerial(ocs.getSerialNo());
 
                     //send subscription failure message
-                    if (!resultHeader.getResultCode().equals("405000000")) {
+                    if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
                         //roll-back transcation on AM
                         //send notifaction message
                         SMSClient.send_sms(msisdn, resultHeader.getResultDesc());
@@ -142,22 +139,20 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
 
                 ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID).getResultHeader();
 
-                subscriptionInfo.setOcsResp(resultHeader.getResultCode());
-                subscriptionInfo.setOcsDesc(resultHeader.getResultDesc());
-                subscriptionInfo.setRequestSerial(ocs.getSerialNo());
+                requestLog.setOcsResp(resultHeader.getResultCode());
+                requestLog.setOcsDesc(resultHeader.getResultDesc());
+                requestLog.setRequestSerial(ocs.getSerialNo());
 
                 LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
                 LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
 
                 //send subscription failure message
-                if (!resultHeader.getResultCode().equals("405000000")) {
+                if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
                     //roll-back transcation on AM
                     //send notifaction message
                     SMSClient.send_sms(msisdn, resultHeader.getResultDesc());
                 }
             }
-
-            logRequest();
 
         } catch (MyPakalastBundleException ex) {
 
@@ -167,25 +162,18 @@ public class ProcessRequest extends ProcessUtil implements Runnable {
 
         } catch (IOException | NamingException | ParserConfigurationException | ServiceException ex) {
 
-            SMSClient.send_sms(subscriptionInfo.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
+            SMSClient.send_sms(requestLog.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
 
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage() + " | " + msisdn, ex);
 
-            subscriptionInfo.setException_str(ex.getLocalizedMessage());
+            requestLog.setException_str(ex.getLocalizedMessage());
 
         } finally {
-            if (ic != null) {
-                try {
-                    ic.close();
-                } catch (NamingException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
-            }
 
+            logRequest();
+
+            //clear session data
+            hzClient.clearSessionData(msisdn);
         }
-
-        //clear session data
-        hzClient.clearSessionData(msisdn);
-
     }
 }//end of class

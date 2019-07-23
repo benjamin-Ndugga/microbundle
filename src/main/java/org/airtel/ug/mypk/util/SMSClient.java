@@ -1,4 +1,4 @@
-package org.airtel.ug.util;
+package org.airtel.ug.mypk.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

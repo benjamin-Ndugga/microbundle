@@ -1,4 +1,4 @@
-package org.ibm.hz;
+package org.airtel.ug.mypk.util;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;

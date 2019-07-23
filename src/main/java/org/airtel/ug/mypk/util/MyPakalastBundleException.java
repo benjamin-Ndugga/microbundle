@@ -1,6 +1,4 @@
-package org.airtel.ug.util;
-
-import java.text.ParseException;
+package org.airtel.ug.mypk.util;
 
 /**
  *

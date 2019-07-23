@@ -1,45 +1,38 @@
-package org.ibm.ussd;
+package org.airtel.ug.mypk.util;
 
 /**
  *
  * @author benjamin
  */
-public class MicroBundleMenuItem implements Comparable<MicroBundleMenuItem> {
+public class MenuItem implements Comparable<MenuItem> {
 
     private int id;
     private int bandId;
     private int optionId;
     private int price;
-    private String ocsVoiceSmsProdId;
-    private String dataProId;
-    private String amVoiceSmsProdId;
+    private String ocsProdId;
+    private String amProdId;
     private String menuItemName;
 
-    public String getOcsVoiceSmsProdId() {
-        return ocsVoiceSmsProdId;
+    public String getOcsProdId() {
+        return ocsProdId;
     }
 
-    public void setOcsVoiceSmsProdId(String ocsVoiceSmsProdId) {
-        this.ocsVoiceSmsProdId = ocsVoiceSmsProdId;
+    public void setOcsProdId(String ocsProdId) {
+        this.ocsProdId = ocsProdId;
     }
 
-    public String getDataProId() {
-        return dataProId;
+    
+
+    public String getAmProdId() {
+        return amProdId;
     }
 
-    public void setDataProId(String dataProId) {
-        this.dataProId = dataProId;
+    public void setAmProdId(String amProdId) {
+        this.amProdId = amProdId;
     }
 
-    public String getAmVoiceSmsProdId() {
-        return amVoiceSmsProdId;
-    }
-
-    public void setAmVoiceSmsProdId(String amVoiceSmsProdId) {
-        this.amVoiceSmsProdId = amVoiceSmsProdId;
-    }
-
-    public MicroBundleMenuItem() {
+    public MenuItem() {
     }
 
     public String getMenuItemName() {
@@ -88,7 +81,7 @@ public class MicroBundleMenuItem implements Comparable<MicroBundleMenuItem> {
     }
 
     @Override
-    public int compareTo(MicroBundleMenuItem m) {
+    public int compareTo(MenuItem m) {
         //-1 when is less
         //0 when equal to
         //+1 greater than

@@ -1,4 +1,4 @@
-package org.airtel.ug.util;
+package org.airtel.ug.mypk.retry;
 
 import java.io.Serializable;
 
@@ -9,18 +9,18 @@ import java.io.Serializable;
  */
 public class RetryRequest implements Serializable {
 
-    private String msisdn, optionId, sessionId, sourceIp, externalId;
-    private int currentRetryCount = 5;
+    private String msisdn, sessionId, sourceIp, externalId, imsi;
+    private int optionId, currentRetryCount = 1;
 
-    public RetryRequest() {
+    public String getImsi() {
+        return imsi;
     }
 
-    public RetryRequest(String msisdn, String bnumber, String optionId, String sessionId, String externalId, String sourceIp) {
-        this.msisdn = msisdn;
-        this.optionId = optionId;
-        this.sessionId = sessionId;
-        this.sourceIp = sourceIp;
-        this.externalId = externalId;
+    public void setImsi(String imsi) {
+        this.imsi = imsi;
+    }
+
+    public RetryRequest() {
     }
 
     public int getCurrentRetryCount() {
@@ -47,11 +47,11 @@ public class RetryRequest implements Serializable {
         this.msisdn = msisdn;
     }
 
-    public String getOptionId() {
+    public int getOptionId() {
         return optionId;
     }
 
-    public void setOptionId(String optionId) {
+    public void setOptionId(int optionId) {
         this.optionId = optionId;
     }
 
@@ -73,7 +73,7 @@ public class RetryRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "MYPAKA-TXN {" + msisdn + "," + optionId + "," + sessionId + "| RETRY-COUNT :" + currentRetryCount + "}";
+        return "DATA-PK {" + msisdn + "," + optionId + "," + sessionId + "| RETRY-COUNT :" + currentRetryCount + "}";
     }
 
 }

@@ -1,4 +1,4 @@
-package org.airtel.ug.util;
+package org.airtel.ug.mypk.util;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -74,7 +74,7 @@ public class MenuHandler {
      * @param bandId the band for which whose menu will be generated
      *
      * @return the ArrayLis of the Menu to be displayed
-     * @throws org.airtel.ug.util.MyPakalastBundleException
+     * @throws org.airtel.ug.mypk.util.MyPakalastBundleException
      */
     public ArrayList<MenuItem> getMenuForDisplay(int bandId) throws MyPakalastBundleException {
         ArrayList<MenuItem> menu_to_display = new ArrayList<>();
@@ -100,7 +100,7 @@ public class MenuHandler {
      * @param bandId
      * @param option_id
      * @return
-     * @throws org.airtel.ug.util.MyPakalastBundleException
+     * @throws org.airtel.ug.mypk.util.MyPakalastBundleException
      */
     public MenuItem getMenuItem(int bandId, int option_id) throws MyPakalastBundleException {
 

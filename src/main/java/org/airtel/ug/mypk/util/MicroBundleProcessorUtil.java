@@ -1,4 +1,4 @@
-package org.airtel.ug.util;
+package org.airtel.ug.mypk.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import org.airtel.ug.am.MobiquityReponseHandler;
+import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -29,20 +29,40 @@ import org.xml.sax.SAXException;
  *
  * @author Benjamin
  */
-public class ProcessUtil {
+public class MicroBundleProcessorUtil {
 
     public static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
+    public static final String OCS_SUCCESS_CODE = "405000000";
 
-    public final SubscriptionLog subscriptionInfo = new SubscriptionLog();
+    public static final String OCS_OPERATOR_ID = "MicroBundle";
 
-    public ProcessUtil() {
+    public String OCS_IP, OCS_PORT;
+    public final RequestLog requestLog = new RequestLog();
+
+    public MicroBundleProcessorUtil() {
+        InitialContext ic = null;
 
         try {
+
+            ic = new InitialContext();
+            OCS_IP = (String) ic.lookup("resource/ocs/ip");
+            OCS_PORT = (String) ic.lookup("resource/ocs/port");
+
+            requestLog.setChannel("USSD");
+
             //set the processing node
-            subscriptionInfo.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException ex) {
+            requestLog.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException | NamingException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
+        } finally {
+            if (ic != null) {
+                try {
+                    ic.close();
+                } catch (NamingException ex) {
+                    LOGGER.log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
 
@@ -52,7 +72,7 @@ public class ProcessUtil {
 
         try {
 
-            LOGGER.log(Level.INFO, "LOGGING_REQUEST | {0}", subscriptionInfo.getMsisdn());
+            LOGGER.log(Level.INFO, "LOGGING_REQUEST | {0}", requestLog.getMsisdn());
 
             ic = new InitialContext();
 
@@ -81,36 +101,36 @@ public class ProcessUtil {
                     + "EXCEPTION_STR) "
                     + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
-            statement.setString(1, subscriptionInfo.getMsisdn());
-            statement.setString(2, subscriptionInfo.getImsi());
-            statement.setString(3, subscriptionInfo.getSessionid());
-            statement.setInt(4, subscriptionInfo.getBand_id());
-            statement.setString(5, subscriptionInfo.getOcsResp());
-            statement.setString(6, subscriptionInfo.getOcsDesc());
-            statement.setString(7, subscriptionInfo.getRequestIp());
-            statement.setString(8, subscriptionInfo.getProcessingNode());
-            statement.setInt(9, subscriptionInfo.getOptionId());
-            statement.setString(10, subscriptionInfo.getRequestSerial());
-            statement.setString(11, subscriptionInfo.getOcsProdID());
-            statement.setString(12, subscriptionInfo.getAmProdId());
-            statement.setInt(13, subscriptionInfo.getPrice());
-            statement.setString(14, subscriptionInfo.getMobiquity_code());
-            statement.setString(15, subscriptionInfo.getMobiquity_desc());
-            statement.setString(16, subscriptionInfo.getMobiquity_transid());
-            statement.setString(17, subscriptionInfo.getExt_transid());
-            statement.setString(18, subscriptionInfo.getMobiquity_xml_resp());
-            statement.setString(19, subscriptionInfo.getException_str());
+            statement.setString(1, requestLog.getMsisdn());
+            statement.setString(2, requestLog.getImsi());
+            statement.setString(3, requestLog.getSessionid());
+            statement.setInt(4, requestLog.getBand_id());
+            statement.setString(5, requestLog.getOcsResp());
+            statement.setString(6, requestLog.getOcsDesc());
+            statement.setString(7, requestLog.getRequestIp());
+            statement.setString(8, requestLog.getProcessingNode());
+            statement.setInt(9, requestLog.getOptionId());
+            statement.setString(10, requestLog.getRequestSerial());
+            statement.setString(11, requestLog.getOcsProdID());
+            statement.setString(12, requestLog.getAmProdId());
+            statement.setInt(13, requestLog.getPrice());
+            statement.setString(14, requestLog.getMobiquity_code());
+            statement.setString(15, requestLog.getMobiquity_desc());
+            statement.setString(16, requestLog.getMobiquity_transid());
+            statement.setString(17, requestLog.getExt_transid());
+            statement.setString(18, requestLog.getMobiquity_xml_resp());
+            statement.setString(19, requestLog.getException_str());
 
             int i = statement.executeUpdate();
 
             connection.commit();
 
-            LOGGER.log(Level.INFO, "EXECUTE_UPDATE_RESPONSE {0} | {1}", new Object[]{i, subscriptionInfo.getMsisdn()});
+            LOGGER.log(Level.INFO, "EXECUTE_UPDATE_RESPONSE {0} | {1}", new Object[]{i, requestLog.getMsisdn()});
 
         } catch (NullPointerException | NamingException | SQLException ex) {
 
-            SMSClient.send_sms(subscriptionInfo.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
-            LOGGER.log(Level.INFO, null, ex + " | " + subscriptionInfo.getMsisdn());
+            SMSClient.send_sms(requestLog.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
+            LOGGER.log(Level.INFO, null, ex + " | " + requestLog.getMsisdn());
 
         } finally {
 
@@ -154,7 +174,7 @@ public class ProcessUtil {
 
             ic = new InitialContext();
 
-            //test-ip-port --- > http://172.27.77.135:3777
+            //test-OCS_IP-OCS_PORT --- > http://172.27.77.135:3777
             String AM_IP_PORT = (String) ic.lookup("resource/am/socket");
             String MBQT_PREFUNDED_ACC = (String) ic.lookup("resource/am/voice/nickname");
             //String MBQT_PREFUNDED_ACC = "1063002";
@@ -205,7 +225,7 @@ public class ProcessUtil {
                 xmlresponse.append(inputLine);
             }
 
-            subscriptionInfo.setMobiquity_xml_resp(xmlresponse.toString());
+            requestLog.setMobiquity_xml_resp(xmlresponse.toString());
 
             LOGGER.log(Level.INFO, "AM_RESPONSE: {0} | {1}", new Object[]{xmlresponse.toString(), msisdn});
 
@@ -218,9 +238,9 @@ public class ProcessUtil {
             LOGGER.log(Level.INFO, "TXNSTATUS {0} | {1}", new Object[]{mobiquityReponseHandler.getTxnstatus(), msisdn});
             LOGGER.log(Level.INFO, "MESSAGE  {0} | {1}", new Object[]{mobiquityReponseHandler.getMessage(), msisdn});
 
-            subscriptionInfo.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
-            subscriptionInfo.setMobiquity_desc(mobiquityReponseHandler.getMessage());
-            subscriptionInfo.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
+            requestLog.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
+            requestLog.setMobiquity_desc(mobiquityReponseHandler.getMessage());
+            requestLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
 
             return mobiquityReponseHandler;
 
@@ -259,7 +279,7 @@ public class ProcessUtil {
 
         String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(100000000));
 
-        subscriptionInfo.setExt_transid(externalId);
+        requestLog.setExt_transid(externalId);
 
         LOGGER.log(Level.INFO, "MOBIQUIY-EXTERNAL ID {0} ", new Object[]{externalId});
 
@@ -334,9 +354,9 @@ public class ProcessUtil {
             LOGGER.log(Level.INFO, "AM_RESPONSE_MESSAGE: {0}", mobiquityReponseHandler.getMessage() + " | " + msisdn);
             LOGGER.log(Level.INFO, "AM_RESPONSE_TXID: {0}", mobiquityReponseHandler.getTxnid() + " | " + msisdn);
 
-            subscriptionInfo.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
-            subscriptionInfo.setMobiquity_desc(mobiquityReponseHandler.getMessage());
-            subscriptionInfo.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
+            requestLog.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
+            requestLog.setMobiquity_desc(mobiquityReponseHandler.getMessage());
+            requestLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
 
             return mobiquityReponseHandler;
         } finally {
