@@ -112,7 +112,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
             } else {
                 //send failure sms
                 //SMSClient.send_sms(msisdn, mobiquityReponseHandler.getMessage());
-                SMSClient.send_sms(msisdn,"Dear customer your request failed to be processed.");
+                 SMSClient.send_sms(msisdn, "Dear customer you request for " + menuItem.getMenuItemName() + " failed to be processed.");
             }
 
         } catch (ServiceException | IOException | NamingException | ParserConfigurationException | SAXException ex) {
