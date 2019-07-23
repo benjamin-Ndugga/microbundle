@@ -99,8 +99,9 @@ public class MicroBundleProcessorUtil {
                     + "MOBIQUITY_TRANS_ID,"
                     + "EXT_TRANSID,"
                     + "MOBIQUITY_XML_RESP,"
-                    + "EXCEPTION_STR) "
-                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    + "EXCEPTION_STR,"
+                    + "CHANNEL) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             statement.setString(1, requestLog.getMsisdn());
             statement.setString(2, requestLog.getImsi());
@@ -121,6 +122,7 @@ public class MicroBundleProcessorUtil {
             statement.setString(17, requestLog.getExt_transid());
             statement.setString(18, requestLog.getMobiquity_xml_resp());
             statement.setString(19, requestLog.getException_str());
+            statement.setString(20, requestLog.getChannel());
 
             int i = statement.executeUpdate();
 
@@ -280,7 +282,7 @@ public class MicroBundleProcessorUtil {
 
         String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextLong());
 
-        LOGGER.log(Level.INFO, "MOBIQUIY-EXTERNAL ID {0} ", new Object[]{externalId});
+        LOGGER.log(Level.INFO, "INTERNAL-SESSION-ID {0} ", new Object[]{externalId});
 
         return externalId;
     }
