@@ -23,7 +23,7 @@ public class RetryRequestHandlerBean {
 
     public static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
 
-    @Resource(lookup = "concurrent/datamypakalast")
+    @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
 
     @Schedule(second = "*/15", minute = "*", hour = "*", info = "retry_request_processor")

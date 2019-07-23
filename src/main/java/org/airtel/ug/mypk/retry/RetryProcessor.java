@@ -57,6 +57,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
         requestLog.setSessionid(sessionId);
         requestLog.setRequestIp(sourceIp);
         requestLog.setImsi(imsi);
+        requestLog.setExt_transid(externaId);
 
         try {
 
@@ -110,7 +111,8 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
 
             } else {
                 //send failure sms
-                SMSClient.send_sms(msisdn, mobiquityReponseHandler.getMessage());
+                //SMSClient.send_sms(msisdn, mobiquityReponseHandler.getMessage());
+                SMSClient.send_sms(msisdn,"Dear customer your request failed to be processed.");
             }
 
         } catch (ServiceException | IOException | NamingException | ParserConfigurationException | SAXException ex) {
@@ -144,7 +146,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
 
             LOGGER.log(Level.INFO, "{0} | {1}", new Object[]{ex.getLocalizedMessage(), msisdn});
 
-            SMSClient.send_sms(msisdn, "Failed to process your request, Please dial *175# and select a bundle.");
+            SMSClient.send_sms(msisdn, "Failed to process your request, Please dial *149# and select a bundle.");
 
         } finally {
             logRequest();
