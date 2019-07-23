@@ -40,26 +40,30 @@ public class MicroBundleProcessorUtil {
 
     public String OCS_IP, OCS_PORT;
     public final RequestLog requestLog = new RequestLog();
+    public int MAX_RETRY_COUNT = 5;
 
     public MicroBundleProcessorUtil() {
-        InitialContext ic = null;
+        InitialContext ctx = null;
 
         try {
 
-            ic = new InitialContext();
-            OCS_IP = (String) ic.lookup("resource/ocs/ip");
-            OCS_PORT = (String) ic.lookup("resource/ocs/port");
+            ctx = new InitialContext();
+            OCS_IP = (String) ctx.lookup("resource/ocs/ip");
+            OCS_PORT = (String) ctx.lookup("resource/ocs/port");
 
             requestLog.setChannel("USSD");
 
             //set the processing node
             requestLog.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
+
+            MAX_RETRY_COUNT = (Integer) ctx.lookup("resource/am/retry");
+
         } catch (UnknownHostException | NamingException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         } finally {
-            if (ic != null) {
+            if (ctx != null) {
                 try {
-                    ic.close();
+                    ctx.close();
                 } catch (NamingException ex) {
                     LOGGER.log(Level.SEVERE, null, ex);
                 }
@@ -269,8 +273,8 @@ public class MicroBundleProcessorUtil {
     }
 
     /**
-     * 
-     * @return  the internal session id for this request
+     *
+     * @return the internal session id for this request
      */
     public final String generateInternalSessionId() {
         //randomise the id

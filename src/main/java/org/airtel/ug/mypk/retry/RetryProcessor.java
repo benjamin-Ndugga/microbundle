@@ -25,7 +25,6 @@ import org.xml.sax.SAXException;
 public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable {
 
     private RetryRequest retryRequest = null;
-    private static final int MAX_RETRY_COUNT = 5;
 
     public RetryProcessor(RetryRequest retryRequest) {
 
@@ -112,7 +111,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
             } else {
                 //send failure sms
                 //SMSClient.send_sms(msisdn, mobiquityReponseHandler.getMessage());
-                 SMSClient.send_sms(msisdn, "Dear customer you request for " + menuItem.getMenuItemName() + " failed to be processed.");
+                SMSClient.send_sms(msisdn, "Dear customer you request for " + menuItem.getMenuItemName() + " failed to be processed.");
             }
 
         } catch (ServiceException | IOException | NamingException | ParserConfigurationException | SAXException ex) {
