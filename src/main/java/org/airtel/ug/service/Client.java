@@ -103,9 +103,7 @@ public class Client extends HttpServlet {
                 out.println("MYPAKALAST");
                 out.println("---------------");
 
-                menu.forEach((menuItem) -> {
-                    out.println(menuItem);
-                });
+                menu.forEach(out::println);
 
                 LOGGER.log(Level.INFO, "DISPLAY_MENU | {0}", MSISDN);
 
