@@ -22,6 +22,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
+import org.airtel.ug.mypk.menu.MenuItem;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -158,13 +159,14 @@ public class MicroBundleProcessorUtil {
      * @param msisdn
      * @param menuItem
      * @param pin
+     * @param externalId
      * @return
      * @throws MalformedURLException
      * @throws IOException
      * @throws ParserConfigurationException
      * @throws NamingException
      */
-    public final MobiquityReponseHandler debitMobiquityAccount(String msisdn, MenuItem menuItem, String pin) throws MalformedURLException, IOException, ParserConfigurationException, NamingException {
+    public final MobiquityReponseHandler debitMobiquityAccount(String msisdn, MenuItem menuItem, String pin, String externalId) throws MalformedURLException, IOException, ParserConfigurationException, NamingException {
 
         OutputStream output = null;
         BufferedReader reader = null;
@@ -185,11 +187,6 @@ public class MicroBundleProcessorUtil {
 
             LOGGER.log(Level.INFO, "AM_IP_PORT {0} | {1}", new Object[]{AM_IP_PORT, msisdn});
 
-            String mqtTransId = getMqtTransId();
-
-            LOGGER.log(Level.INFO, "SETTING_MQT_TRANS_ID {0} | {1}", new Object[]{mqtTransId, msisdn});
-
-            String url = AM_IP_PORT;
             String charset = "UTF-8";
 
             String request = "<COMMAND>\n"
@@ -200,14 +197,14 @@ public class MicroBundleProcessorUtil {
                     + "<MSISDN2>" + MBQT_PREFUNDED_ACC + "</MSISDN2>\n"
                     + "<AMOUNT>" + menuItem.getPrice() + "</AMOUNT>\n"
                     + "<PIN>" + pin + "</PIN>\n"
-                    + "<EXTTRID>" + mqtTransId + "</EXTTRID>\n"
+                    + "<EXTTRID>" + externalId + "</EXTTRID>\n"
                     + "<TXNTYPE>MERCHANT</TXNTYPE>\n"
                     + "<REFERENCE1>" + menuItem.getAmProdId() + "-" + menuItem.getMenuItemName() + "</REFERENCE1>\n"
                     + "<USERNAME>" + MBQT_USERNAME + "</USERNAME>\n"
                     + "<PASSWORD>" + MBQT_PASSWORD + "</PASSWORD>\n"
                     + "</COMMAND>";
 
-            URLConnection connection = new URL(url).openConnection();
+            URLConnection connection = new URL(AM_IP_PORT).openConnection();
             connection.setDoOutput(true);
             connection.setRequestProperty("Accept-Charset", charset);
             connection.setRequestProperty("Content-Type", "text/xml");
@@ -269,7 +266,11 @@ public class MicroBundleProcessorUtil {
         }
     }
 
-    public final String getMqtTransId() {
+    /**
+     * 
+     * @return  the internal session id for this request
+     */
+    public final String generateInternalSessionId() {
         //randomise the id
         char alphabet[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
             'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
@@ -277,9 +278,7 @@ public class MicroBundleProcessorUtil {
             'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
         Random random = new Random();
 
-        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(100000000));
-
-        requestLog.setExt_transid(externalId);
+        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextLong());
 
         LOGGER.log(Level.INFO, "MOBIQUIY-EXTERNAL ID {0} ", new Object[]{externalId});
 
@@ -295,7 +294,7 @@ public class MicroBundleProcessorUtil {
      * @throws javax.xml.parsers.ParserConfigurationException
      * @throws org.xml.sax.SAXException
      */
-    public MobiquityReponseHandler inquireTransactionStatusOfExtId(String externalId, String msisdn) throws MalformedURLException, IOException, ParserConfigurationException, SAXException, NamingException {
+    public final MobiquityReponseHandler inquireTransactionStatusOfExtId(String externalId, String msisdn) throws MalformedURLException, IOException, ParserConfigurationException, SAXException, NamingException {
 
         OutputStream output = null;
         BufferedReader reader = null;

@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.util;
+package org.airtel.ug.mypk.menu;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import org.airtel.ug.mypk.util.MyPakalastBundleException;
 
 /**
  *
@@ -34,7 +35,7 @@ public class MenuHandler {
             DataSource dataSource = (DataSource) new InitialContext().lookup("KIKADB");
             connection = dataSource.getConnection();
 
-            statement = connection.prepareStatement("SELECT ID,BAND_ID,PROD_ID,PROD_ID_AM,MENU_ITEM,OPTION_ID,PRDCOST FROM MICRO_PRODUCTS");
+            statement = connection.prepareStatement("SELECT * FROM MICRO_PRODUCTS");
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -44,10 +45,12 @@ public class MenuHandler {
                 menuItem.setId(resultSet.getInt(1));
                 menuItem.setBandId(resultSet.getInt(2));
                 menuItem.setOcsProdId(resultSet.getString(3));
-                menuItem.setAmProdId(resultSet.getString(4));
-                menuItem.setMenuItemName(resultSet.getString(5));
-                menuItem.setOptionId(resultSet.getInt(6));
-                menuItem.setPrice(resultSet.getInt(7));
+                menuItem.setMenuItemName(resultSet.getString(4));
+                menuItem.setOptionId(resultSet.getInt(5));
+                menuItem.setPrice(resultSet.getInt(6));
+                menuItem.setDataProdId(resultSet.getString(7));
+                menuItem.setAmProdId(resultSet.getString(8));
+
 
                 MENU_LIST.add(menuItem);
 
@@ -85,7 +88,7 @@ public class MenuHandler {
 
         if (menu_to_display.isEmpty()) {
             //throw new MyPakalastBundleException("Failed to process request can not categorise Your Number");
-            throw new MyPakalastBundleException("You are ineligible for this service.Dial *175# to select another bundle of your choice.");
+            throw new MyPakalastBundleException("You are ineligible for this service.Dial *149# to select another bundle of your choice.");
         }
 
         //sort the menu from small to big according to the option_id

@@ -17,10 +17,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import org.airtel.ug.hz.HZClient;
+import org.airtel.ug.mypk.menu.MenuHandler;
+import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MyPakalastBundleException;
-import org.airtel.ug.mypk.util.MenuHandler;
-import org.airtel.ug.mypk.util.MenuItem;
+
 
 /**
  *
@@ -104,7 +105,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        HZClient hzClient = new HZClient();
+        HzClient hzClient = new HzClient();
 
         String responseTxt = "";
 
@@ -250,7 +251,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        HZClient hzClient = new HZClient();
+        HzClient hzClient = new HzClient();
 
         String responseTxt = "";
 

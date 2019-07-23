@@ -10,7 +10,8 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.NamingException;
-import org.airtel.ug.datapk.util.HzClient;
+import org.airtel.ug.mypk.util.HzClient;
+
 
 /**
  *
@@ -20,7 +21,7 @@ import org.airtel.ug.datapk.util.HzClient;
 @Singleton
 public class RetryRequestHandlerBean {
 
-    public static final Logger LOGGER = Logger.getLogger("DATAMYPK_EJB");
+    public static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
 
     @Resource(lookup = "concurrent/datamypakalast")
     private ManagedExecutorService mes;

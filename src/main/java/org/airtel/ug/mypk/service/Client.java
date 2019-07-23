@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
@@ -16,9 +17,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.airtel.ug.hz.HZClient;
-import org.airtel.ug.mypk.util.MenuHandler;
-import org.airtel.ug.mypk.util.MenuItem;
+import org.airtel.ug.mypk.menu.MenuHandler;
+import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MyPakalastBundleException;
 
 /**
@@ -55,7 +56,7 @@ public class Client extends HttpServlet {
         String IMSI = request.getParameter("IMSI");
         String INPUT = request.getParameter("INPUT");
 
-        HZClient hzClient = new HZClient();
+        HzClient hzClient = new HzClient();
 
         try {
 
@@ -198,6 +199,8 @@ public class Client extends HttpServlet {
             }
         } catch (NumberFormatException ex) {
 
+            LOGGER.log(Level.INFO, "INVALID-INPUT | {0}", MSISDN);
+
             response.setHeader("Cont", "FB");
 
             out.println("Invalid input, Please try again.");
@@ -212,7 +215,7 @@ public class Client extends HttpServlet {
 
             hzClient.clearSessionData(MSISDN);
 
-        } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NamingException ex) {
+        } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NamingException | RejectedExecutionException ex) {
 
             response.setHeader("Cont", "FB");
 

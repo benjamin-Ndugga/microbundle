@@ -8,16 +8,13 @@ import java.util.logging.Level;
 import javax.naming.NamingException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.rpc.ServiceException;
-import org.airtel.ug.datakpk.am.MobiquityReponseHandler;
-import org.airtel.ug.datapk.util.DataPakalastBundleException;
-import org.airtel.ug.datapk.util.DataPakalastProcessorUtil;
-import static org.airtel.ug.datapk.util.DataPakalastProcessorUtil.LOGGER;
-import static org.airtel.ug.datapk.util.DataPakalastProcessorUtil.OCS_OPERATOR_ID;
-import org.airtel.ug.datapk.util.HzClient;
-import org.airtel.ug.datapk.util.MenuHandler;
-import org.airtel.ug.datapk.util.MenuItem;
-import org.airtel.ug.datapk.util.SMSClient;
+import org.airtel.ug.mypk.am.MobiquityReponseHandler;
+import org.airtel.ug.mypk.menu.MenuHandler;
+import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MicroBundleProcessorUtil;
+import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
 import org.xml.sax.SAXException;
 
@@ -125,7 +122,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
              */
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage() + " | " + msisdn, ex);
 
-            requestLog.setExp_str(ex.getLocalizedMessage());
+            requestLog.setException_str(ex.getLocalizedMessage());
 
             /**
              * if the current retry count is higher than 0
@@ -141,9 +138,9 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
                 SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.");
             }
 
-        } catch (DataPakalastBundleException ex) {
+        } catch (MyPakalastBundleException ex) {
 
-            requestLog.setExp_str(ex.getLocalizedMessage());
+            requestLog.setException_str(ex.getLocalizedMessage());
 
             LOGGER.log(Level.INFO, "{0} | {1}", new Object[]{ex.getLocalizedMessage(), msisdn});
 

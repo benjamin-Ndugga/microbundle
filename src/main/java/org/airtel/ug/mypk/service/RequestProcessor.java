@@ -6,14 +6,14 @@ import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.io.IOException;
 import java.util.logging.Level;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.rpc.ServiceException;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
-import org.airtel.ug.hz.HZClient;
-import org.airtel.ug.mypk.util.MenuHandler;
-import org.airtel.ug.mypk.util.MenuItem;
+import org.airtel.ug.mypk.menu.MenuHandler;
+import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.retry.RetryRequest;
+import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MyPakalastBundleException;
 import org.airtel.ug.mypk.util.MicroBundleProcessorUtil;
 import org.ibm.ws.OCSWebMethods;
@@ -63,8 +63,8 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
     @Override
     public void run() {
 
-        HZClient hzClient = new HZClient();
-
+        HzClient hzClient = new HzClient();
+        String internalSessionId = null;
         try {
 
             OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
@@ -92,10 +92,16 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
             LOGGER.log(Level.INFO, "SELECTED_MENU_ITEM {0} | {1}", new Object[]{menuItem, msisdn});
 
+            internalSessionId = generateInternalSessionId();
+
             if (pin != null) {
 
+                requestLog.setExt_transid(internalSessionId);
+
+                LOGGER.log(Level.INFO, "SETTING_MQT_TRANS_ID {0} | {1}", new Object[]{internalSessionId, msisdn});
+
                 //send charge on Airtel Money
-                MobiquityReponseHandler mbqtResp = debitMobiquityAccount(msisdn.substring(3), menuItem, pin);
+                MobiquityReponseHandler mbqtResp = debitMobiquityAccount(msisdn.substring(3), menuItem, pin, internalSessionId);
 
                 if (mbqtResp.getTxnstatus().equals(MOBIQUITY_SUCCESS_CODE)) {
 
@@ -105,7 +111,11 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
                     prod1.setId(menuItem.getAmProdId());
                     prod1.setValidMode(ValidMode.value1);
 
-                    SubscribeAppendantProductRequestProduct[] productList = {prod1};
+                    SubscribeAppendantProductRequestProduct prod2 = new SubscribeAppendantProductRequestProduct();
+                    prod2.setId(menuItem.getDataProdId());
+                    prod2.setValidMode(ValidMode.value1);
+
+                    SubscribeAppendantProductRequestProduct[] productList = {prod1, prod2};
 
                     ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN").getResultHeader();
 
@@ -135,9 +145,13 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
                 prod1.setId(menuItem.getOcsProdId());
                 prod1.setValidMode(ValidMode.value1);
 
-                SubscribeAppendantProductRequestProduct[] productList = {prod1};
+                SubscribeAppendantProductRequestProduct prod2 = new SubscribeAppendantProductRequestProduct();
+                prod2.setId(menuItem.getDataProdId());
+                prod2.setValidMode(ValidMode.value1);
 
-                ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID).getResultHeader();
+                SubscribeAppendantProductRequestProduct[] productList = {prod1, prod2};
+
+                ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID, internalSessionId).getResultHeader();
 
                 requestLog.setOcsResp(resultHeader.getResultCode());
                 requestLog.setOcsDesc(resultHeader.getResultDesc());
@@ -162,11 +176,21 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
         } catch (IOException | NamingException | ParserConfigurationException | ServiceException ex) {
 
-            SMSClient.send_sms(requestLog.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
+            SMSClient.send_sms(msisdn, "Your request is being processed at the moment, please wait for a confirmation sms.");
 
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage() + " | " + msisdn, ex);
 
             requestLog.setException_str(ex.getLocalizedMessage());
+
+            RetryRequest rt = new RetryRequest();
+            rt.setMsisdn(msisdn);
+            rt.setSessionId(sessionId);
+            rt.setExternalId(internalSessionId);
+            rt.setOptionId(optionId);
+            rt.setSourceIp(sourceIp);
+            rt.setImsi(imsi);
+
+            hzClient.addRetryRequestToQueue(rt);
 
         } finally {
 
