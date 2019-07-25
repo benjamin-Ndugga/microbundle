@@ -26,7 +26,7 @@ public class RetryRequestHandlerBean {
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
 
-    @Schedule(second = "*/15", minute = "*", hour = "*", info = "retry_request_processor")
+    @Schedule(second = "*/10", minute = "*", hour = "*", info = "retry_request_processor")
     public void process() {
         try {
 

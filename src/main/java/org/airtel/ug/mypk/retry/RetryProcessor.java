@@ -136,7 +136,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
 
                 hzClient.addRetryRequestToQueue(retryRequest);
             } else {
-                SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.");
+                SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id "+retryRequest.getExternalId());
             }
 
         } catch (MyPakalastBundleException ex) {
