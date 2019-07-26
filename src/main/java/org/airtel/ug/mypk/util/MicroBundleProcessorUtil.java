@@ -42,6 +42,12 @@ public class MicroBundleProcessorUtil {
     public final RequestLog requestLog = new RequestLog();
     public int MAX_RETRY_COUNT = 5;
 
+    static {
+        
+        HostNameVerifier.verify();
+        
+    }
+
     public MicroBundleProcessorUtil() {
         InitialContext ctx = null;
 
@@ -284,7 +290,7 @@ public class MicroBundleProcessorUtil {
             'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
         Random random = new Random();
 
-        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextLong());
+        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(10000000));
 
         LOGGER.log(Level.INFO, "INTERNAL-SESSION-ID {0} ", new Object[]{externalId});
 
@@ -324,12 +330,9 @@ public class MicroBundleProcessorUtil {
                     + "    <PASSWORD>" + MBQT_PASSWORD + "</PASSWORD>\n"
                     + "</COMMAND>";
 
-            //String url = "http://172.27.77.135:9192/services/uvc";
-            String url = AM_IP_PORT;
-
             String charset = "UTF-8";
 
-            URLConnection connection = new URL(url).openConnection();
+            URLConnection connection = new URL(AM_IP_PORT).openConnection();
             connection.setDoOutput(true);
             connection.setRequestProperty("Accept-Charset", charset);
             connection.setRequestProperty("Content-Type", "text/xml");

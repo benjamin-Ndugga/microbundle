@@ -4,3 +4,17 @@
     <EXTRA>TF</EXTRA>
     <TXNID>null</TXNID>   
 </COMMAND>
+
+<map name="pnp.bnumber">
+    <in-memory-format>BINARY</in-memory-format>
+    <backup-count>1</backup-count>
+    <async-backup-count>0</async-backup-count>
+    <time-to-live-seconds>30</time-to-live-seconds>
+    <max-idle-seconds>30</max-idle-seconds>
+    <eviction-policy>LFU</eviction-policy>
+    <max-size policy="PER_NODE">15000000</max-size>
+    <eviction-percentage>25</eviction-percentage>
+    <min-eviction-check-millis>100</min-eviction-check-millis>
+    <merge-policy>com.hazelcast.map.merge.PutIfAbsentMapMergePolicy</merge-policy>
+    <cache-deserialized-values>INDEX-ONLY</cache-deserialized-values>
+</map>

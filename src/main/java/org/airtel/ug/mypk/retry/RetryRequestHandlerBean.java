@@ -12,7 +12,6 @@ import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.NamingException;
 import org.airtel.ug.mypk.util.HzClient;
 
-
 /**
  *
  * @author Benjamin E Ndugga
