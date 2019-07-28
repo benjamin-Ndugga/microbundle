@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
-import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
@@ -31,9 +29,6 @@ import org.airtel.ug.mypk.util.MyPakalastBundleException;
 public class Client extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
-
-    @Resource(lookup = "concurrent/mypakalast")
-    private ManagedExecutorService mes;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -111,61 +106,62 @@ public class Client extends HttpServlet {
                 LOGGER.log(Level.INFO, "DISPLAY_MENU | {0}", MSISDN);
 
             } else {
+                Integer billingOption = 2;
+                Integer optionId = Integer.parseInt(INPUT);
 
-                LOGGER.log(Level.INFO, "CHECK_OPTION_ID | {0}", MSISDN);
-
-                //check if this is continuing from 1st menu
-                Integer optionId = hzClient.getOptionId(MSISDN);
-
-                LOGGER.log(Level.INFO, "OPTION_ID_VALUE {0} | {1}", new Object[]{optionId, MSISDN});
-
-                //if there is no optionId, save the optionId and prompt for the billing option
-                if (optionId == null) {
-
-                    LOGGER.log(Level.INFO, "PROMPT_BILLING_OPTION | {0}", MSISDN);
-
-                    hzClient.saveOptionId(MSISDN, Integer.parseInt(INPUT));
-
-                    response.setHeader("Cont", "FC");
-
-                    out.println("Please select billing option:");
-                    out.println("1.Airtel Money.");
-                    out.println("2.Airtime.");
-
-                    return;
-                }
-
-                LOGGER.log(Level.INFO, "CHECK_BILLING_OPTION | {0}", MSISDN);
-
-                //get the billing option selected
-                Integer billingOption = hzClient.getBillingOption(MSISDN);
-
-                LOGGER.log(Level.INFO, "BILLING_OPTION_FOUND {0} | {1}", new Object[]{billingOption, MSISDN});
-
-                if (billingOption == null) {
-
-                    LOGGER.log(Level.INFO, "SAVE BILLING OPTION {0} | {1}", new Object[]{INPUT, MSISDN});
-
-                    hzClient.saveBillingOption(MSISDN, INPUT);
-
-                    LOGGER.log(Level.INFO, "PROMPT_PIN | {0}", MSISDN);
-
-                    //if the billingOption sent throught the INPUT is 1 then prompt for the PIN 
-                    if (INPUT.equals("1")) {
-
-                        response.setHeader("Cont", "FC");
-
-                        out.println("Please Enter PIN:");
-
-                        return;
-                    } else {
-
-                        //set the billingoption to 2
-                        billingOption = 2;
-
-                    }
-                }
-
+//                LOGGER.log(Level.INFO, "CHECK_OPTION_ID | {0}", MSISDN);
+//
+//                //check if this is continuing from 1st menu
+//                Integer optionId = hzClient.getOptionId(MSISDN);
+//
+//                LOGGER.log(Level.INFO, "OPTION_ID_VALUE {0} | {1}", new Object[]{optionId, MSISDN});
+//
+//                //if there is no optionId, save the optionId and prompt for the billing option
+//                if (optionId == null) {
+//
+//                    LOGGER.log(Level.INFO, "PROMPT_BILLING_OPTION | {0}", MSISDN);
+//
+//                    hzClient.saveOptionId(MSISDN, Integer.parseInt(INPUT));
+//
+//                    response.setHeader("Cont", "FC");
+//
+//                    out.println("Please select billing option:");
+//                    out.println("1.Airtel Money.");
+//                    out.println("2.Airtime.");
+//
+//                    return;
+//                }
+//
+//                LOGGER.log(Level.INFO, "CHECK_BILLING_OPTION | {0}", MSISDN);
+//
+//                //get the billing option selected
+//                Integer billingOption = hzClient.getBillingOption(MSISDN);
+//
+//                LOGGER.log(Level.INFO, "BILLING_OPTION_FOUND {0} | {1}", new Object[]{billingOption, MSISDN});
+//
+//                if (billingOption == null) {
+//
+//                    LOGGER.log(Level.INFO, "SAVE BILLING OPTION {0} | {1}", new Object[]{INPUT, MSISDN});
+//
+//                    hzClient.saveBillingOption(MSISDN, INPUT);
+//
+//                    LOGGER.log(Level.INFO, "PROMPT_PIN | {0}", MSISDN);
+//
+//                    //if the billingOption sent throught the INPUT is 1 then prompt for the PIN 
+//                    if (INPUT.equals("1")) {
+//
+//                        response.setHeader("Cont", "FC");
+//
+//                        out.println("Please Enter PIN:");
+//
+//                        return;
+//                    } else {
+//
+//                        //set the billingoption to 2
+//                        billingOption = 2;
+//
+//                    }
+//                }
                 //get the source of this request
                 String src = request.getHeader("X-Real-IP");
 
@@ -184,17 +180,17 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for confirmation SMS.");
 
-                    mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI));
+                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI)).start();
 
                 } else {
                     //proceed to process Airtel Money Request
-                    response.setHeader("Cont", "FB");
-
-                    LOGGER.log(Level.INFO, "Request-Thread-dispatched-AirtelMoney | {0}", MSISDN);
-
-                    out.println("Your request is being processed. Please wait for confirmation SMS.");
-
-                    mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
+//                    response.setHeader("Cont", "FB");
+//
+//                    LOGGER.log(Level.INFO, "Request-Thread-dispatched-AirtelMoney | {0}", MSISDN);
+//
+//                    out.println("Your request is being processed. Please wait for confirmation SMS.");
+//
+//                    mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
         } catch (NumberFormatException ex) {

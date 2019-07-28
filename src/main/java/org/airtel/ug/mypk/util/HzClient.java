@@ -187,7 +187,7 @@ public class HzClient {
             mapBillingOption.remove(msisdn);
 
         } catch (IllegalStateException | NamingException ex) {
-            Logger.getLogger(HzClient.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         } finally {
             if (client != null) {
                 client.shutdown();
@@ -252,41 +252,54 @@ public class HzClient {
 
     private HazelcastInstance connectToHzInstance() throws IllegalStateException, NamingException {
 
-        InitialContext ic = new InitialContext();
+        InitialContext ic = null;
 
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.setProperty("hazelcast.logging.type", "none");
+        try {
+            
+            ic = new InitialContext();
 
-        String hz_name = (String) ic.lookup("resource/hz/name");
-        String hz_pass = (String) ic.lookup("resource/hz/pass");
+            ClientConfig clientConfig = new ClientConfig();
+            clientConfig.setProperty("hazelcast.logging.type", "none");
 
-        LOGGER.log(Level.INFO, "HZ_NAME {0}", hz_name);
-        LOGGER.log(Level.INFO, "HZ_PASS {0}", hz_pass);
+            //String hz_name = (String) ic.lookup("resource/hz/name");
+            //String hz_pass = (String) ic.lookup("resource/hz/pass");
 
-        clientConfig.setGroupConfig(new GroupConfig(hz_name, hz_pass));
-        ClientNetworkConfig networkConfig = clientConfig.getNetworkConfig();
+            String hz_name = (String) ic.lookup("resource/hz/mypkname");
+            String hz_pass = (String) ic.lookup("resource/hz/mypkpass");
+            
+            
+            LOGGER.log(Level.INFO, "HZ_NAME {0}", hz_name);
+            LOGGER.log(Level.INFO, "HZ_PASS {0}", hz_pass);
 
-        LOGGER.log(Level.INFO, "CONNECTING TO HZ-INSTANCE");
+            clientConfig.setGroupConfig(new GroupConfig(hz_name, hz_pass));
+            ClientNetworkConfig networkConfig = clientConfig.getNetworkConfig();
 
-        String hz_ip_list = (String) ic.lookup("resource/hz/ip");
-        String[] ip_list = hz_ip_list.split("\\,");
+            LOGGER.log(Level.INFO, "CONNECTING TO HZ-INSTANCE");
 
-        for (String ip : ip_list) {
-            LOGGER.log(Level.INFO, "ADDING IP {0}", ip);
-            networkConfig.addAddress(ip);
+            String hz_ip_list = (String) ic.lookup("resource/hz/mypkip");
+            String[] ip_list = hz_ip_list.split("\\,");
+
+            for (String ip : ip_list) {
+                LOGGER.log(Level.INFO, "ADDING IP {0}", ip);
+                networkConfig.addAddress(ip);
+            }
+
+            networkConfig.setSmartRouting(true);
+            networkConfig.setConnectionTimeout(1000);
+            networkConfig.setConnectionAttemptPeriod(250);
+            networkConfig.setConnectionAttemptLimit(1);
+            clientConfig.setNetworkConfig(networkConfig);
+
+            HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
+
+            LOGGER.log(Level.INFO, "CONNECTED TO | {0}", client.getName());
+
+            return client;
+        } finally {
+            if (ic != null) {
+                ic.close();
+            }
         }
-
-        networkConfig.setSmartRouting(true);
-        networkConfig.setConnectionTimeout(1000);
-        networkConfig.setConnectionAttemptPeriod(250);
-        networkConfig.setConnectionAttemptLimit(1);
-        clientConfig.setNetworkConfig(networkConfig);
-
-        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
-
-        LOGGER.log(Level.INFO, "CONNECTED TO | {0}", client.getName());
-
-        return client;
     }
 
 }
