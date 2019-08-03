@@ -43,9 +43,9 @@ public class MicroBundleProcessorUtil {
     public int MAX_RETRY_COUNT = 5;
 
     static {
-        
+
         HostNameVerifier.verify();
-        
+
     }
 
     public MicroBundleProcessorUtil() {
@@ -290,7 +290,8 @@ public class MicroBundleProcessorUtil {
             'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
         Random random = new Random();
 
-        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(10000000));
+        //String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(10000000));
+        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextLong());
 
         LOGGER.log(Level.INFO, "INTERNAL-SESSION-ID {0} ", new Object[]{externalId});
 

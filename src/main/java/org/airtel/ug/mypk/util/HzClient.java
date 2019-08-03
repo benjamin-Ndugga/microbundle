@@ -255,19 +255,15 @@ public class HzClient {
         InitialContext ic = null;
 
         try {
-            
+
             ic = new InitialContext();
 
             ClientConfig clientConfig = new ClientConfig();
             clientConfig.setProperty("hazelcast.logging.type", "none");
 
-            //String hz_name = (String) ic.lookup("resource/hz/name");
-            //String hz_pass = (String) ic.lookup("resource/hz/pass");
+            String hz_name = (String) ic.lookup("resource/hz/name");
+            String hz_pass = (String) ic.lookup("resource/hz/pass");
 
-            String hz_name = (String) ic.lookup("resource/hz/mypkname");
-            String hz_pass = (String) ic.lookup("resource/hz/mypkpass");
-            
-            
             LOGGER.log(Level.INFO, "HZ_NAME {0}", hz_name);
             LOGGER.log(Level.INFO, "HZ_PASS {0}", hz_pass);
 
@@ -276,7 +272,7 @@ public class HzClient {
 
             LOGGER.log(Level.INFO, "CONNECTING TO HZ-INSTANCE");
 
-            String hz_ip_list = (String) ic.lookup("resource/hz/mypkip");
+            String hz_ip_list = (String) ic.lookup("resource/hz/ip");
             String[] ip_list = hz_ip_list.split("\\,");
 
             for (String ip : ip_list) {
@@ -286,7 +282,7 @@ public class HzClient {
 
             networkConfig.setSmartRouting(true);
             networkConfig.setConnectionTimeout(1000);
-            networkConfig.setConnectionAttemptPeriod(250);
+            networkConfig.setConnectionAttemptPeriod(0);
             networkConfig.setConnectionAttemptLimit(1);
             clientConfig.setNetworkConfig(networkConfig);
 

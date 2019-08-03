@@ -12,11 +12,12 @@ import org.airtel.ug.mypk.util.HzClient;
  *
  * @author Benjamin E Ndugga
  */
+
 public class RetryRequestHandlerBean {
 
     public static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
 
-    @Schedule(second = "*/10", minute = "*", hour = "*", info = "retry_request_processor")
+    @Schedule(second = "*/10", minute = "*", hour = "*", info = "retry_request_processor", persistent = false)
     public void process() {
         try {
 
