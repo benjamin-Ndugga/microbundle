@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
@@ -30,6 +32,9 @@ public class Client extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
 
+    @Resource(lookup="concurrent/mypakalast")
+    private ManagedExecutorService  mes;
+    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -180,7 +185,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for confirmation SMS.");
 
-                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI)).start();
+                    mes.submit(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI));
 
                 } else {
                     //proceed to process Airtel Money Request

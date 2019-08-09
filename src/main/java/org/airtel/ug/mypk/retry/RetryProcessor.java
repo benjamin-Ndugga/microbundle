@@ -5,6 +5,7 @@ import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.naming.NamingException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.rpc.ServiceException;
@@ -24,6 +25,8 @@ import org.xml.sax.SAXException;
  */
 public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable {
 
+    private  static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
+    
     private RetryRequest retryRequest = null;
 
     public RetryProcessor(RetryRequest retryRequest) {

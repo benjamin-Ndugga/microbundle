@@ -6,6 +6,7 @@ import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.naming.NamingException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.rpc.ServiceException;
@@ -23,6 +24,9 @@ import org.ibm.ws.OCSWebMethods;
  * @author benjamin
  */
 public class RequestProcessor extends MicroBundleProcessorUtil implements Runnable {
+    
+    private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
+    
 
     private final String msisdn;
     private final String sessionId;

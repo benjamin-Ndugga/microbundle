@@ -97,9 +97,9 @@ public class MenuItem implements Comparable<MenuItem> {
         //-1 when is less
         //0 when equal to
         //+1 greater than
-        if (m.getOptionId() < this.getOptionId()) {
+        if (m.getOptionId() > getOptionId()) {
             return 1;
-        } else if (m.getOptionId() == this.getOptionId()) {
+        } else if (m.getOptionId() ==getOptionId()) {
             return 0;
         } else {
             return -1;

@@ -29,7 +29,6 @@ public class MenuHandler {
         PreparedStatement statement;
         try {
 
-            
             LOGGER.log(Level.INFO, "LOADING_MENU");
 
             DataSource dataSource = (DataSource) new InitialContext().lookup("KIKADB");
@@ -50,7 +49,6 @@ public class MenuHandler {
                 menuItem.setPrice(resultSet.getInt(6));
                 menuItem.setDataProdId(resultSet.getString(7));
                 menuItem.setAmProdId(resultSet.getString(8));
-
 
                 MENU_LIST.add(menuItem);
 
@@ -82,9 +80,11 @@ public class MenuHandler {
     public ArrayList<MenuItem> getMenuForDisplay(int bandId) throws MyPakalastBundleException {
         ArrayList<MenuItem> menu_to_display = new ArrayList<>();
 
-        MENU_LIST.stream().filter((menuItem) -> (menuItem.getBandId() == bandId)).forEachOrdered((menuItem) -> {
-            menu_to_display.add(menuItem);
-        });
+        MENU_LIST.stream()
+                .filter((menuItem) -> (menuItem.getBandId() == bandId))
+                .forEachOrdered((menuItem) -> {
+                    menu_to_display.add(menuItem);
+                });
 
         if (menu_to_display.isEmpty()) {
             //throw new MyPakalastBundleException("Failed to process request can not categorise Your Number");

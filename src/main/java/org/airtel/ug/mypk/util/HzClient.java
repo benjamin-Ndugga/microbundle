@@ -20,7 +20,8 @@ public class HzClient {
 
     private static final Logger LOGGER = Logger.getLogger("MYPAKALAST_HZ");
     private static final int DEFAULT_BAND = 6;
-    private static final String MICRO_BUNDLE_MAP_NAME = "com.airtel.ug.micro";
+    //private static final String MICRO_BUNDLE_MAP_NAME = "com.airtel.ug.micro";
+    private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
     private static final String OPTION_ID_MAP_NAME = " pnp.optionid";
     private static final String BILLING_OPTION_MAP_NAME = "pnp.billingoption";
     private static final String AM_RETRY_QUEUE_NAME = "am.mypk";

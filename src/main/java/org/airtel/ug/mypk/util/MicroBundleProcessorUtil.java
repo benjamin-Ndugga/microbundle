@@ -32,7 +32,7 @@ import org.xml.sax.SAXException;
  */
 public class MicroBundleProcessorUtil {
 
-    public static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
+    private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
     public static final String OCS_SUCCESS_CODE = "405000000";
 
