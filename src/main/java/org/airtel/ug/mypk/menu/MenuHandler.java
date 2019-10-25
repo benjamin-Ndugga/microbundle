@@ -110,15 +110,17 @@ public class MenuHandler {
         try {
             ArrayList<MenuItem> band_menu = new ArrayList<>();
 
-            MENU_LIST.stream().filter((menuItem) -> (menuItem.getBandId() == bandId)).forEachOrdered((menuItem) -> {
-                band_menu.add(menuItem);
-            });
+            MENU_LIST.stream()
+                    .filter((menuItem) -> (menuItem.getBandId() == bandId))
+                    .forEachOrdered((menuItem) -> {
+                        band_menu.add(menuItem);
+                    });
 
             if (band_menu.isEmpty()) {
                 throw new MyPakalastBundleException("Failed to process request can not categorise Your Number");
             }
 
-            //sorts from the smalles to the biggest
+            //sorts based on the comparable implementation
             Collections.sort(band_menu);
 
             //based on the positioning of the elements in the arrayList

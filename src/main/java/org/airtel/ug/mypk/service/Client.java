@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
@@ -32,9 +33,9 @@ public class Client extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
 
-    @Resource(lookup="concurrent/mypakalast")
-    private ManagedExecutorService  mes;
-    
+    @Resource(lookup = "concurrent/mypakalast")
+    private ManagedExecutorService mes;
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -106,7 +107,13 @@ public class Client extends HttpServlet {
                 out.println("MYPAKALAST");
                 out.println("---------------");
 
-                menu.forEach(out::println);
+                //menu.forEach(out::println);
+                int item_no = 1;
+
+                for (MenuItem menuItem : menu) {
+                    out.println(item_no + "." + menuItem.getMenuItemName());
+                    item_no ++;
+                }
 
                 LOGGER.log(Level.INFO, "DISPLAY_MENU | {0}", MSISDN);
 
