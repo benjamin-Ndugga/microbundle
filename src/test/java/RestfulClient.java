@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.service;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +19,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.service.RequestProcessor;
 import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MyPakalastBundleException;
 
@@ -384,7 +385,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI)).start();
+                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
 
                     return responseTxt;
 

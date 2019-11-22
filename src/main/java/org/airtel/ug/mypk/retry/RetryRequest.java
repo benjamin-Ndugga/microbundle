@@ -73,7 +73,9 @@ public class RetryRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "DATA-PK {" + msisdn + "," + optionId + "," + sessionId + "| RETRY-COUNT :" + currentRetryCount + "}";
+        return "RetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", currentRetryCount=" + currentRetryCount + '}';
     }
+
+    
 
 }

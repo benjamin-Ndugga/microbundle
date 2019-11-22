@@ -2,7 +2,7 @@ package org.airtel.ug.mypk.menu;
 
 /**
  *
- * @author benjamin
+ * @author Benjamin E Ndugga
  */
 public class MenuItem implements Comparable<MenuItem> {
 
@@ -12,16 +12,16 @@ public class MenuItem implements Comparable<MenuItem> {
     private int price;
     private String ocsProdId;
     private String amProdId;
-    private String dataProdId;
+    //private String dataProdId;
     private String menuItemName;
 
-    public String getDataProdId() {
-        return dataProdId;
-    }
-
-    public void setDataProdId(String dataProdId) {
-        this.dataProdId = dataProdId;
-    }
+//    public String getDataProdId() {
+//        return dataProdId;
+//    }
+//
+//    public void setDataProdId(String dataProdId) {
+//        this.dataProdId = dataProdId;
+//    }
 
     
     
@@ -92,6 +92,13 @@ public class MenuItem implements Comparable<MenuItem> {
         return this.optionId + "." + this.menuItemName;
     }
 
+    
+    public String printLogFormat() {
+        return "MenuItem{" + "id=" + id + ", bandId=" + bandId + ", optionId=" + optionId + ", price=" + price + ", ocsProdId=" + ocsProdId + ", amProdId=" + amProdId + ", menuItemName=" + menuItemName + '}';
+    }
+    
+    
+
     @Override
     public int compareTo(MenuItem m) {
         //-1 when is less
@@ -106,4 +113,7 @@ public class MenuItem implements Comparable<MenuItem> {
         }
     }
 
+    
+    
+    
 }

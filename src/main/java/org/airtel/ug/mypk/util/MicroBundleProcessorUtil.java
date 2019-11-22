@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
@@ -22,17 +21,19 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
+import org.airtel.ug.mypk.exceptions.DebitAccountException;
+import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
  *
- * @author Benjamin
+ * @author Benjamin E Ndugga
  */
 public class MicroBundleProcessorUtil {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPAKALAST");
+    private static final Logger LOGGER = Logger.getLogger("MYPK");
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
     public static final String OCS_SUCCESS_CODE = "405000000";
 
@@ -173,12 +174,9 @@ public class MicroBundleProcessorUtil {
      * @param pin
      * @param externalId
      * @return
-     * @throws MalformedURLException
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws NamingException
+     * @throws org.airtel.ug.mypk.exceptions.DebitAccountException
      */
-    public final MobiquityReponseHandler debitMobiquityAccount(String msisdn, MenuItem menuItem, String pin, String externalId) throws MalformedURLException, IOException, ParserConfigurationException, NamingException {
+    public final MobiquityReponseHandler debitMobiquityAccount(String msisdn, MenuItem menuItem, String pin, String externalId) throws DebitAccountException {
 
         OutputStream output = null;
         BufferedReader reader = null;
@@ -253,11 +251,11 @@ public class MicroBundleProcessorUtil {
 
             return mobiquityReponseHandler;
 
-        } catch (SAXException ex) {
+        } catch (IOException | NamingException | ParserConfigurationException | SAXException ex) {
 
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 
-            return new MobiquityReponseHandler();
+            throw new DebitAccountException("MOBIQUITY: " + ex.getLocalizedMessage());
 
         } finally {
             try {
@@ -291,7 +289,7 @@ public class MicroBundleProcessorUtil {
         Random random = new Random();
 
         //String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(10000000));
-        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextLong());
+        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + Math.abs(random.nextLong()));
 
         LOGGER.log(Level.INFO, "INTERNAL-SESSION-ID {0} ", new Object[]{externalId});
 
@@ -307,7 +305,7 @@ public class MicroBundleProcessorUtil {
      * @throws javax.xml.parsers.ParserConfigurationException
      * @throws org.xml.sax.SAXException
      */
-    public final MobiquityReponseHandler inquireTransactionStatusOfExtId(String externalId, String msisdn) throws MalformedURLException, IOException, ParserConfigurationException, SAXException, NamingException {
+    public final MobiquityReponseHandler inquireTransactionStatusOfExtId(String externalId, String msisdn) throws TransactionStatusException {
 
         OutputStream output = null;
         BufferedReader reader = null;
@@ -368,6 +366,8 @@ public class MicroBundleProcessorUtil {
             requestLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
 
             return mobiquityReponseHandler;
+        } catch (IOException | NamingException | ParserConfigurationException | SAXException ex) {
+            throw new TransactionStatusException("Mobiquity: " + ex.getLocalizedMessage());
         } finally {
             try {
                 if (output != null) {
@@ -382,7 +382,7 @@ public class MicroBundleProcessorUtil {
                     ic.close();
                 }
 
-            } catch (IOException ex) {
+            } catch (IOException | NamingException ex) {
                 LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
             }
         }

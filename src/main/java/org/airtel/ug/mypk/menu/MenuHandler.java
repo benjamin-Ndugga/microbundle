@@ -34,7 +34,15 @@ public class MenuHandler {
             DataSource dataSource = (DataSource) new InitialContext().lookup("KIKADB");
             connection = dataSource.getConnection();
 
-            statement = connection.prepareStatement("SELECT * FROM MICRO_PRODUCTS");
+            statement = connection.prepareStatement("SELECT "
+                    + "ID,"
+                    + "BAND_ID,"
+                    + "PROD_ID,"
+                    + "MENU_ITEM,"
+                    + "OPTION_ID,"
+                    + "PRDCOST,"
+                    + "PROD_ID_AM "
+                    + "FROM MICRO_PRODUCTS");
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -47,12 +55,12 @@ public class MenuHandler {
                 menuItem.setMenuItemName(resultSet.getString(4));
                 menuItem.setOptionId(resultSet.getInt(5));
                 menuItem.setPrice(resultSet.getInt(6));
-                menuItem.setDataProdId(resultSet.getString(7));
-                menuItem.setAmProdId(resultSet.getString(8));
+                //menuItem.setDataProdId(resultSet.getString(7));
+                menuItem.setAmProdId(resultSet.getString(7));
 
                 MENU_LIST.add(menuItem);
 
-                LOGGER.log(Level.INFO, "LOADED-MENU {0}", menuItem);
+                LOGGER.log(Level.INFO, "LOADED-MENU {0}", menuItem.printLogFormat());
             }
 
         } catch (NamingException | SQLException ex) {

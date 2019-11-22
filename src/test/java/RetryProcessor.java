@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.retry;
+
 
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
@@ -15,6 +15,7 @@ import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MicroBundleProcessorUtil;
 import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.retry.RetryRequest;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
 import org.xml.sax.SAXException;
@@ -117,7 +118,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
                 SMSClient.send_sms(msisdn, "Dear customer you request for " + menuItem.getMenuItemName() + " failed to be processed.");
             }
 
-        } catch (ServiceException | IOException | NamingException | ParserConfigurationException | SAXException ex) {
+        } catch (Exception ex) {
 
             /**
              * in this section push retry request to the queue for another
@@ -141,14 +142,6 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
             } else {
                 SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id "+retryRequest.getExternalId());
             }
-
-        } catch (MyPakalastBundleException ex) {
-
-            requestLog.setException_str(ex.getLocalizedMessage());
-
-            LOGGER.log(Level.INFO, "{0} | {1}", new Object[]{ex.getLocalizedMessage(), msisdn});
-
-            SMSClient.send_sms(msisdn, "Failed to process your request, Please dial *149# and select a bundle.");
 
         } finally {
             logRequest();
