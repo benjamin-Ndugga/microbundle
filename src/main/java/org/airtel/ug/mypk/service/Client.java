@@ -1,5 +1,6 @@
 package org.airtel.ug.mypk.service;
 
+import com.hazelcast.internal.metrics.ProbeUnit;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -60,6 +61,11 @@ public class Client extends HttpServlet {
 
         try {
 
+            LOGGER.log(Level.INFO, "SESSIONID >>> {0} | {1}", new Object[]{SESSIONID, MSISDN});
+            LOGGER.log(Level.INFO, "INPUT >>> {0} | {1}", new Object[]{INPUT, MSISDN});
+            LOGGER.log(Level.INFO, "IMSI >>> {0} | {1}", new Object[]{IMSI, MSISDN});
+            LOGGER.log(Level.INFO, "TYPE >>> {0} | {1}", new Object[]{TYPE, MSISDN});
+
             //************************************************************
             //retrive post-paid imsis
             ic = new InitialContext();
@@ -81,10 +87,6 @@ public class Client extends HttpServlet {
                 return;
             }
 
-            LOGGER.log(Level.INFO, "SESSION_ID {0} | {1}", new Object[]{SESSIONID, MSISDN});
-            LOGGER.log(Level.INFO, "INPUT {0} | {1}", new Object[]{INPUT, MSISDN});
-            LOGGER.log(Level.INFO, "IMSI {0} | {1}", new Object[]{IMSI, MSISDN});
-
             ArrayList<MenuItem> menu;
 
             //for first time freeflow control request flash a Menu
@@ -92,12 +94,12 @@ public class Client extends HttpServlet {
 
                 response.setHeader("Cont", "FC");
 
-                LOGGER.log(Level.INFO, "LOOKUP_CUSTOMER BAND | {0}", MSISDN);
+                LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", MSISDN);
 
                 //get the band for this customer
                 int band_id = hzClient.getBand(MSISDN);
 
-                LOGGER.log(Level.INFO, "BAND_ID FOUND {0} | {1}", new Object[]{band_id, MSISDN});
+                LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, MSISDN});
 
                 menu = new MenuHandler().getMenuForDisplay(band_id);
 
@@ -116,50 +118,53 @@ public class Client extends HttpServlet {
 
                 LOGGER.log(Level.INFO, "DISPLAY_MENU | {0}", MSISDN);
 
-            } else {
-                //Integer billingOption = 2;
-                //Integer optionId = Integer.parseInt(INPUT);
+            } else if (INPUT.equals("#")) {
 
-                LOGGER.log(Level.INFO, "CHECK_OPTION_ID | {0}", MSISDN);
+                LOGGER.log(Level.INFO, "OPTS-TO-TERMINATE-SESSION | {0}", MSISDN);
+
+                hzClient.clearSessionData(MSISDN);
+
+                response.setHeader("Cont", "FB");
+
+                out.println("Thank You for Choosing Airtel.");
+
+            } else {
+
+                LOGGER.log(Level.INFO, "CHECK-OPTION-ID | {0}", MSISDN);
 
                 //check if this is continuing from 1st menu
                 Integer optionId = hzClient.getOptionId(MSISDN);
 
-                LOGGER.log(Level.INFO, "OPTION_ID_VALUE {0} | {1}", new Object[]{optionId, MSISDN});
-
                 //if there is no optionId, save the optionId and prompt for the billing option
                 if (optionId == null) {
 
-                    LOGGER.log(Level.INFO, "PROMPT_BILLING_OPTION | {0}", MSISDN);
+                    validateBundleSelected(Integer.parseInt(INPUT));
 
                     hzClient.saveOptionId(MSISDN, Integer.parseInt(INPUT));
+
+                    LOGGER.log(Level.INFO, "PROMPT-BILLING-OPTION | {0}", MSISDN);
 
                     response.setHeader("Cont", "FC");
 
                     out.println("Please select billing option:");
                     out.println("1.Airtel Money.");
                     out.println("2.Airtime.");
+                    out.println("#.to quit");
 
                     return;
                 }
 
-                LOGGER.log(Level.INFO, "CHECK_BILLING_OPTION | {0}", MSISDN);
-
                 //get the billing option selected
                 Integer billingOption = hzClient.getBillingOption(MSISDN);
 
-                LOGGER.log(Level.INFO, "BILLING_OPTION_FOUND {0} | {1}", new Object[]{billingOption, MSISDN});
-
                 if (billingOption == null) {
 
-                    LOGGER.log(Level.INFO, "SAVE BILLING OPTION {0} | {1}", new Object[]{INPUT, MSISDN});
-
-                    hzClient.saveBillingOption(MSISDN, INPUT);
-
-                    LOGGER.log(Level.INFO, "PROMPT_PIN | {0}", MSISDN);
-
-                    //if the billingOption sent throught the INPUT is 1 then prompt for the PIN 
+                    //if the billingOption/INPUT is 1 then save and prompt for the PIN 
                     if (INPUT.equals("1")) {
+
+                        hzClient.saveBillingOption(MSISDN, Integer.parseInt(INPUT));
+
+                        LOGGER.log(Level.INFO, "PROMPT-PIN | {0}", MSISDN);
 
                         response.setHeader("Cont", "FC");
 
@@ -167,8 +172,9 @@ public class Client extends HttpServlet {
 
                         return;
                     } else {
-
-                        //set the billingoption to 2
+                        LOGGER.log(Level.INFO, "SETTING-DEFAULT-TO-AT-BILLING-OPTION | {0}", MSISDN);
+                        LOGGER.log(Level.INFO, "BILLING-OPTION: {0} | {1}", new Object[]{billingOption, MSISDN});
+                        //set the billingoption to deafault 2
                         billingOption = 2;
 
                     }
@@ -180,8 +186,6 @@ public class Client extends HttpServlet {
                     src = request.getRemoteAddr();
                 }
 
-                LOGGER.log(Level.INFO, "REQUEST_SENT_FROM {0} | {1}", new Object[]{src, MSISDN});
-
                 if (billingOption == 2) {
                     //proceed to process Airtime Request
 
@@ -189,7 +193,7 @@ public class Client extends HttpServlet {
 
                     LOGGER.log(Level.INFO, "Request-Thread-dispatched-Airtime | {0}", MSISDN);
 
-                    out.println("Your request is being processed. Please wait for confirmation SMS.");
+                    out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
                     mes.submit(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
 
@@ -199,7 +203,7 @@ public class Client extends HttpServlet {
 
                     LOGGER.log(Level.INFO, "Request-Thread-dispatched-AirtelMoney | {0}", MSISDN);
 
-                    out.println("Your request is being processed. Please wait for confirmation SMS.");
+                    out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
                     mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
@@ -210,11 +214,13 @@ public class Client extends HttpServlet {
 
             response.setHeader("Cont", "FB");
 
-            out.println("Invalid input, Please try again.");
+            out.println("Invalid option selected, Please try again.");
 
             hzClient.clearSessionData(MSISDN);
 
         } catch (MyPakalastBundleException ex) {
+
+            LOGGER.log(Level.INFO, ex.getLocalizedMessage());
 
             response.setHeader("Cont", "FB");
 
@@ -244,6 +250,16 @@ public class Client extends HttpServlet {
             }
         }
     }//end of process request
+
+    public void validateBundleSelected(int input) throws MyPakalastBundleException {
+
+        LOGGER.log(Level.INFO, "VALIDATE-BUNDLE-SELECTED");
+
+        if (input < 1 || input > 3) {
+            LOGGER.log(Level.INFO, "INVALID-CHOICE-SELECTED >> {0}", input);
+            throw new MyPakalastBundleException("Invalid choice please choose between options 1-3.");
+        }
+    }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**

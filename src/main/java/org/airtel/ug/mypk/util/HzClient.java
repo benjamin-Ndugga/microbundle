@@ -18,13 +18,13 @@ import javax.naming.NamingException;
  */
 public class HzClient {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPAKALAST_HZ");
-    private static final int DEFAULT_BAND = 6;
+    private static final Logger LOGGER = Logger.getLogger("MYPK_HZ");
+    private static final int DEFAULT_BAND = 10;
     //private static final String MICRO_BUNDLE_MAP_NAME = "com.airtel.ug.micro";
     private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
     private static final String OPTION_ID_MAP_NAME = " pnp.optionid";
     private static final String BILLING_OPTION_MAP_NAME = "pnp.billingoption";
-    private static final String AM_RETRY_QUEUE_NAME = "am.mypk";
+    //private static final String AM_RETRY_QUEUE_NAME = "am.mypk";
 
     /**
      * return the band that belongs to the subscriber
@@ -87,8 +87,18 @@ public class HzClient {
             //get the option id
             IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
 
-            return map.get(msisdn);
+            Integer i = map.get(msisdn);
 
+            LOGGER.log(Level.INFO, "OPTION-ID-VALUE-FOUND: {0} | {1}", new Object[]{i, msisdn});
+
+            if (i == null) {
+                return null;
+            } else {
+                return i;
+            }
+
+        } catch (NullPointerException ex) {
+            return null;
         } finally {
             if (client != null) {
                 client.shutdown();
@@ -107,6 +117,8 @@ public class HzClient {
     public void saveOptionId(String msisdn, int optionId) throws NamingException, NullPointerException, IllegalStateException {
         HazelcastInstance client = null;
         try {
+
+            LOGGER.log(Level.INFO, "SAVING-OPTION-ID: {0} | {1}", new Object[]{optionId, msisdn});
 
             client = connectToHzInstance();
 
@@ -135,13 +147,25 @@ public class HzClient {
         HazelcastInstance client = null;
         try {
 
+            LOGGER.log(Level.INFO, "CHECK-BILLING-OPTION | {0}", msisdn);
+
             client = connectToHzInstance();
 
             //get the billing option
             IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
 
-            return map.get(msisdn);
+            Integer i = map.get(msisdn);
 
+            LOGGER.log(Level.INFO, "BILLING-OPTION-FOUND: {0} | {1}", new Object[]{i, msisdn});
+
+            if (i == null) {
+                return null;
+            } else {
+                return i;
+            }
+
+        } catch (NullPointerException ex) {
+            return null;
         } finally {
             if (client != null) {
                 client.shutdown();
@@ -149,15 +173,24 @@ public class HzClient {
         }
     }
 
-    public void saveBillingOption(String msisdn, String billingOption) throws IllegalStateException, NamingException {
+    /**
+     *
+     * @param msisdn
+     * @param billingOption
+     * @throws IllegalStateException
+     * @throws NamingException
+     */
+    public void saveBillingOption(String msisdn, int billingOption) throws IllegalStateException, NamingException {
         HazelcastInstance client = null;
         try {
+
+            LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION: {0} | {1}", new Object[]{billingOption, msisdn});
 
             client = connectToHzInstance();
             //get the option id
             IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
 
-            map.put(msisdn, Integer.parseInt(billingOption));
+            map.put(msisdn, billingOption);
 
         } finally {
             if (client != null) {
@@ -182,10 +215,12 @@ public class HzClient {
 
             //get the option id
             IMap<String, Integer> mapOptionId = client.getMap(OPTION_ID_MAP_NAME);
-            mapOptionId.remove(msisdn);
+            Integer foundOptionId = mapOptionId.remove(msisdn);
+            LOGGER.log(Level.INFO, "REMOVE-OPTION-ID: {0} | {1}", new Object[]{foundOptionId, msisdn});
 
             IMap<String, Integer> mapBillingOption = client.getMap(BILLING_OPTION_MAP_NAME);
-            mapBillingOption.remove(msisdn);
+            Integer foundBillingOption = mapBillingOption.remove(msisdn);
+            LOGGER.log(Level.INFO, "REMOVE-BILLING-OPTION: {0} | {1}", new Object[]{foundBillingOption, msisdn});
 
         } catch (IllegalStateException | NamingException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
@@ -205,52 +240,50 @@ public class HzClient {
      * @throws IllegalStateException
      * @throws NamingException
      */
-    public <T> T fetchPendingRequest() throws IllegalStateException, NamingException {
-        HazelcastInstance client = null;
-        try {
-            //connect to HzInstance
-            client = connectToHzInstance();
-
-            IQueue<T> queue = client.getQueue(AM_RETRY_QUEUE_NAME);
-
-            return queue.poll();
-
-        } finally {
-            if (client != null) {
-                client.shutdown();
-            }
-        }
-    }
-
+//    public <T> T fetchPendingRequest() throws IllegalStateException, NamingException {
+//        HazelcastInstance client = null;
+//        try {
+//            //connect to HzInstance
+//            client = connectToHzInstance();
+//
+//            IQueue<T> queue = client.getQueue(AM_RETRY_QUEUE_NAME);
+//
+//            return queue.poll();
+//
+//        } finally {
+//            if (client != null) {
+//                client.shutdown();
+//            }
+//        }
+//    }
     /**
      *
      * @param <T> takes any type i.e Pre-Paid or Post-Paid object
      * @param request the request to be added to the queue
      * @throws IllegalStateException in-case the Hazelcast Instance is down
      */
-    public <T> void addRetryRequestToQueue(T request) {
-        HazelcastInstance client = null;
-        try {
-            //connect to HzInstance
-            client = connectToHzInstance();
-
-            IQueue<T> queue = client.getQueue(AM_RETRY_QUEUE_NAME);
-
-            LOGGER.log(Level.INFO, "ADDING-REQUESET-TO-QUEUE ");
-
-            queue.put(request);
-
-        } catch (IllegalStateException | NamingException | InterruptedException ex) {
-
-            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
-
-        } finally {
-            if (client != null) {
-                client.shutdown();
-            }
-        }
-    }
-
+//    public <T> void addRetryRequestToQueue(T request) {
+//        HazelcastInstance client = null;
+//        try {
+//            //connect to HzInstance
+//            client = connectToHzInstance();
+//
+//            IQueue<T> queue = client.getQueue(AM_RETRY_QUEUE_NAME);
+//
+//            LOGGER.log(Level.INFO, "ADDING-REQUESET-TO-QUEUE ");
+//
+//            queue.put(request);
+//
+//        } catch (IllegalStateException | NamingException | InterruptedException ex) {
+//
+//            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+//
+//        } finally {
+//            if (client != null) {
+//                client.shutdown();
+//            }
+//        }
+//    }
     private HazelcastInstance connectToHzInstance() throws IllegalStateException, NamingException {
 
         InitialContext ic = null;
@@ -265,19 +298,19 @@ public class HzClient {
             String hz_name = (String) ic.lookup("resource/hz/name");
             String hz_pass = (String) ic.lookup("resource/hz/pass");
 
-            LOGGER.log(Level.INFO, "HZ_NAME {0}", hz_name);
-            LOGGER.log(Level.INFO, "HZ_PASS {0}", hz_pass);
+            LOGGER.log(Level.CONFIG, "HZ_NAME {0}", hz_name);
+            LOGGER.log(Level.CONFIG, "HZ_PASS {0}", hz_pass);
 
             clientConfig.setGroupConfig(new GroupConfig(hz_name, hz_pass));
             ClientNetworkConfig networkConfig = clientConfig.getNetworkConfig();
 
-            LOGGER.log(Level.INFO, "CONNECTING TO HZ-INSTANCE");
+            LOGGER.log(Level.CONFIG, "CONNECTING-TO-HZ-INSTANCE");
 
             String hz_ip_list = (String) ic.lookup("resource/hz/ip");
             String[] ip_list = hz_ip_list.split("\\,");
 
             for (String ip : ip_list) {
-                LOGGER.log(Level.INFO, "ADDING IP {0}", ip);
+                LOGGER.log(Level.CONFIG, "ADDING-IP {0}", ip);
                 networkConfig.addAddress(ip);
             }
 
@@ -289,7 +322,7 @@ public class HzClient {
 
             HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
 
-            LOGGER.log(Level.INFO, "CONNECTED TO | {0}", client.getName());
+            LOGGER.log(Level.CONFIG, "CONNECTED-TO | {0}", client.getName());
 
             return client;
         } finally {

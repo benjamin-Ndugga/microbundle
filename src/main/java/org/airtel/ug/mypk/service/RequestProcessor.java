@@ -49,6 +49,8 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
         this.imsi = retryRequest.getImsi();
 
         requestLog.setChannel("RETRY");
+        
+        LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
     }
 
     public RequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
@@ -62,6 +64,8 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
         requestLog.setChannel("USSD");
 
+        LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
+        
     }
 
     private void subscribeViaAirtime() {
@@ -99,6 +103,8 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
             internalSessionId = generateInternalSessionId();
 
+            LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getOcsProdId(), msisdn});
+            
             //send request to OCS
             SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
             prod1.setId(menuItem.getOcsProdId());
@@ -183,6 +189,8 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
             if (mbqtResp.getTxnstatus().equals(MOBIQUITY_SUCCESS_CODE)) {
 
+                LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getAmProdId(), msisdn});
+                
                 //append the product to zero-rental 
                 //send request OCS
                 SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
@@ -302,6 +310,8 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
                     //init ocs client object
                     OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
 
+                    LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getAmProdId(), msisdn});
+                    
                     SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
                     prod1.setId(menuItem.getAmProdId());
                     prod1.setValidMode(ValidMode.value1);

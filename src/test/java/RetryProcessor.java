@@ -3,22 +3,16 @@
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.NamingException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.rpc.ServiceException;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.util.HzClient;
 import org.airtel.ug.mypk.util.MicroBundleProcessorUtil;
-import org.airtel.ug.mypk.util.MyPakalastBundleException;
 import org.airtel.ug.mypk.retry.RetryRequest;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
-import org.xml.sax.SAXException;
 
 /**
  *
@@ -138,7 +132,7 @@ public class RetryProcessor extends MicroBundleProcessorUtil implements Runnable
 
                 retryRequest.setCurrentRetryCount(++currentRetryCount);
 
-                hzClient.addRetryRequestToQueue(retryRequest);
+                //hzClient.addRetryRequestToQueue(retryRequest);
             } else {
                 SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id "+retryRequest.getExternalId());
             }

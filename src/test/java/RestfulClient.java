@@ -347,7 +347,7 @@ public class RestfulClient {
 
                     LOGGER.log(Level.INFO, "SAVE BILLING OPTION {0} | {1}", new Object[]{INPUT, MSISDN});
 
-                    hzClient.saveBillingOption(MSISDN, INPUT);
+                    hzClient.saveBillingOption(MSISDN, Integer.parseInt(INPUT));
 
                     LOGGER.log(Level.INFO, "PROMPT_PIN | {0}", MSISDN);
 
