@@ -1,6 +1,5 @@
 package org.airtel.ug.mypk.service;
 
-import com.hazelcast.internal.metrics.ProbeUnit;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -122,7 +121,7 @@ public class Client extends HttpServlet {
 
                 LOGGER.log(Level.INFO, "OPTS-TO-TERMINATE-SESSION | {0}", MSISDN);
 
-                hzClient.clearSessionData(MSISDN);
+                hzClient.clearSessionData(SESSIONID);
 
                 response.setHeader("Cont", "FB");
 
@@ -133,14 +132,14 @@ public class Client extends HttpServlet {
                 LOGGER.log(Level.INFO, "CHECK-OPTION-ID | {0}", MSISDN);
 
                 //check if this is continuing from 1st menu
-                Integer optionId = hzClient.getOptionId(MSISDN);
+                Integer optionId = hzClient.getOptionId(SESSIONID);
 
                 //if there is no optionId, save the optionId and prompt for the billing option
                 if (optionId == null) {
 
                     validateBundleSelected(Integer.parseInt(INPUT));
 
-                    hzClient.saveOptionId(MSISDN, Integer.parseInt(INPUT));
+                    hzClient.saveOptionId(SESSIONID, Integer.parseInt(INPUT));
 
                     LOGGER.log(Level.INFO, "PROMPT-BILLING-OPTION | {0}", MSISDN);
 
@@ -155,14 +154,14 @@ public class Client extends HttpServlet {
                 }
 
                 //get the billing option selected
-                Integer billingOption = hzClient.getBillingOption(MSISDN);
+                Integer billingOption = hzClient.getBillingOption(SESSIONID);
 
                 if (billingOption == null) {
 
                     //if the billingOption/INPUT is 1 then save and prompt for the PIN 
                     if (INPUT.equals("1")) {
 
-                        hzClient.saveBillingOption(MSISDN, Integer.parseInt(INPUT));
+                        hzClient.saveBillingOption(SESSIONID, Integer.parseInt(INPUT));
 
                         LOGGER.log(Level.INFO, "PROMPT-PIN | {0}", MSISDN);
 
@@ -216,7 +215,7 @@ public class Client extends HttpServlet {
 
             out.println("Invalid option selected, Please try again.");
 
-            hzClient.clearSessionData(MSISDN);
+            hzClient.clearSessionData(SESSIONID);
 
         } catch (MyPakalastBundleException ex) {
 
@@ -226,7 +225,7 @@ public class Client extends HttpServlet {
 
             out.println(ex.getLocalizedMessage());
 
-            hzClient.clearSessionData(MSISDN);
+            hzClient.clearSessionData(SESSIONID);
 
         } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NamingException | RejectedExecutionException ex) {
 
@@ -234,7 +233,7 @@ public class Client extends HttpServlet {
 
             out.println("Your request can not be processed at the moment!,Please try again later.");
 
-            hzClient.clearSessionData(MSISDN);
+            hzClient.clearSessionData(SESSIONID);
 
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 

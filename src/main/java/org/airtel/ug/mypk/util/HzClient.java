@@ -72,13 +72,13 @@ public class HzClient {
 
     /**
      *
-     * @param msisdn the requesting msisdn
+     * @param sessionId the requesting msisdn
      * @return the option selected from the menu
      * @throws NullPointerException
      * @throws IllegalStateException
      * @throws NamingException
      */
-    public Integer getOptionId(String msisdn) throws NullPointerException, IllegalStateException, NamingException {
+    public Integer getOptionId(String sessionId) throws NullPointerException, IllegalStateException, NamingException {
         HazelcastInstance client = null;
         try {
 
@@ -87,9 +87,9 @@ public class HzClient {
             //get the option id
             IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
 
-            Integer i = map.get(msisdn);
+            Integer i = map.get(sessionId);
 
-            LOGGER.log(Level.INFO, "OPTION-ID-VALUE-FOUND: {0} | {1}", new Object[]{i, msisdn});
+            LOGGER.log(Level.INFO, "OPTION-ID-VALUE-FOUND: {0} | {1}", new Object[]{i, sessionId});
 
             if (i == null) {
                 return null;
@@ -108,24 +108,24 @@ public class HzClient {
 
     /**
      *
-     * @param msisdn
+     * @param sessionId
      * @param optionId
      * @throws NamingException
      * @throws NullPointerException
      * @throws IllegalStateException
      */
-    public void saveOptionId(String msisdn, int optionId) throws NamingException, NullPointerException, IllegalStateException {
+    public void saveOptionId(String sessionId, int optionId) throws NamingException, NullPointerException, IllegalStateException {
         HazelcastInstance client = null;
         try {
 
-            LOGGER.log(Level.INFO, "SAVING-OPTION-ID: {0} | {1}", new Object[]{optionId, msisdn});
+            LOGGER.log(Level.INFO, "SAVING-OPTION-ID: {0} | {1}", new Object[]{optionId, sessionId});
 
             client = connectToHzInstance();
 
             //get the option id
             IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
 
-            map.put(msisdn, optionId);
+            map.put(sessionId, optionId);
 
         } finally {
             if (client != null) {
@@ -175,22 +175,22 @@ public class HzClient {
 
     /**
      *
-     * @param msisdn
+     * @param sessionId
      * @param billingOption
      * @throws IllegalStateException
      * @throws NamingException
      */
-    public void saveBillingOption(String msisdn, int billingOption) throws IllegalStateException, NamingException {
+    public void saveBillingOption(String sessionId, int billingOption) throws IllegalStateException, NamingException {
         HazelcastInstance client = null;
         try {
 
-            LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION: {0} | {1}", new Object[]{billingOption, msisdn});
+            LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION: {0} | {1}", new Object[]{billingOption, sessionId});
 
             client = connectToHzInstance();
             //get the option id
             IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
 
-            map.put(msisdn, billingOption);
+            map.put(sessionId, billingOption);
 
         } finally {
             if (client != null) {
@@ -202,11 +202,11 @@ public class HzClient {
     /**
      * clears session data for the requesting customer
      *
-     * @param msisdn the requesting customer
+     * @param sessionId the requesting customer
      */
-    public void clearSessionData(String msisdn) {
+    public void clearSessionData(String sessionId) {
 
-        LOGGER.log(Level.INFO, "CLEAR_SESSION_DATA | {0}", msisdn);
+        LOGGER.log(Level.INFO, "CLEAR_SESSION_DATA | {0}", sessionId);
 
         HazelcastInstance client = null;
         try {
@@ -215,12 +215,12 @@ public class HzClient {
 
             //get the option id
             IMap<String, Integer> mapOptionId = client.getMap(OPTION_ID_MAP_NAME);
-            Integer foundOptionId = mapOptionId.remove(msisdn);
-            LOGGER.log(Level.INFO, "REMOVE-OPTION-ID: {0} | {1}", new Object[]{foundOptionId, msisdn});
+            Integer foundOptionId = mapOptionId.remove(sessionId);
+            LOGGER.log(Level.INFO, "REMOVE-OPTION-ID: {0} | {1}", new Object[]{foundOptionId, sessionId});
 
             IMap<String, Integer> mapBillingOption = client.getMap(BILLING_OPTION_MAP_NAME);
-            Integer foundBillingOption = mapBillingOption.remove(msisdn);
-            LOGGER.log(Level.INFO, "REMOVE-BILLING-OPTION: {0} | {1}", new Object[]{foundBillingOption, msisdn});
+            Integer foundBillingOption = mapBillingOption.remove(sessionId);
+            LOGGER.log(Level.INFO, "REMOVE-BILLING-OPTION: {0} | {1}", new Object[]{foundBillingOption, sessionId});
 
         } catch (IllegalStateException | NamingException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
