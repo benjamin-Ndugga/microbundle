@@ -6,7 +6,6 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.IQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
@@ -20,11 +19,9 @@ public class HzClient {
 
     private static final Logger LOGGER = Logger.getLogger("MYPK_HZ");
     private static final int DEFAULT_BAND = 10;
-    //private static final String MICRO_BUNDLE_MAP_NAME = "com.airtel.ug.micro";
     private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
-    private static final String OPTION_ID_MAP_NAME = " pnp.optionid";
+    private static final String OPTION_ID_MAP_NAME = "pnp.optionid";
     private static final String BILLING_OPTION_MAP_NAME = "pnp.billingoption";
-    //private static final String AM_RETRY_QUEUE_NAME = "am.mypk";
 
     /**
      * return the band that belongs to the subscriber
