@@ -18,8 +18,8 @@ import org.airtel.ug.mypk.exceptions.SubscribeBundleException;
 import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.retry.RetryRequest;
-import org.airtel.ug.mypk.retry.RetryRequestFileHandler;
+import org.airtel.ug.mypk.retry.MicroBundleRetryRequest;
+import org.airtel.ug.mypk.retry.MicroBundleRetryRequestFileHandler;
 import org.airtel.ug.mypk.util.MicroBundleHzClient;
 import org.ibm.ws.OCSWebMethods;
 
@@ -36,11 +36,11 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
     private final String sourceIp;
     private final String imsi;
     private final Integer optionId;
-    
-    private String pin = null;
-    private RetryRequest retryRequest = null;
 
-    public MicroBundleRequestProcessor(RetryRequest retryRequest) {
+    private String pin = null;
+    private MicroBundleRetryRequest retryRequest = null;
+
+    public MicroBundleRequestProcessor(MicroBundleRetryRequest retryRequest) {
         this.retryRequest = retryRequest;
 
         this.msisdn = retryRequest.getMsisdn();
@@ -51,7 +51,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
         this.imsi = retryRequest.getImsi();
 
         requestLog.setChannel("RETRY");
-        
+
         LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
     }
 
@@ -67,7 +67,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
         requestLog.setChannel("USSD");
 
         LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
-        
+
     }
 
     private void subscribeViaAirtime() {
@@ -106,7 +106,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             internalSessionId = generateInternalSessionId();
 
             LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getOcsProdId(), msisdn});
-            
+
             //send request to OCS
             SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
             prod1.setId(menuItem.getOcsProdId());
@@ -192,7 +192,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             if (mbqtResp.getTxnstatus().equals(MOBIQUITY_SUCCESS_CODE)) {
 
                 LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getAmProdId(), msisdn});
-                
+
                 //append the product to zero-rental 
                 //send request OCS
                 SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
@@ -249,7 +249,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
             requestLog.setException_str(ex.getLocalizedMessage());
 
-            RetryRequest rt = new RetryRequest();
+            MicroBundleRetryRequest rt = new MicroBundleRetryRequest();
             rt.setMsisdn(msisdn);
             rt.setSessionId(sessionId);
             rt.setExternalId(internalSessionId);
@@ -257,7 +257,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             rt.setSourceIp(sourceIp);
             rt.setImsi(imsi);
 
-            new RetryRequestFileHandler().writeRetryTransaction(retryRequest);
+            new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
 
         } finally {
 
@@ -284,7 +284,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             LOGGER.log(Level.INFO, "PROCESS-RETRY-REQUEST | {0}", msisdn);
 
             //delete file from the filesystem
-            new RetryRequestFileHandler().deletRetryFile(externalId + ".ser");
+            new MicroBundleRetryRequestFileHandler().deletRetryFile(externalId + ".ser");
 
             LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
 
@@ -313,7 +313,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
                     OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
 
                     LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getAmProdId(), msisdn});
-                    
+
                     SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
                     prod1.setId(menuItem.getAmProdId());
                     prod1.setValidMode(ValidMode.value1);
@@ -326,14 +326,25 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
                     requestLog.setOcsResp(resultHeader.getResultCode());
                     requestLog.setOcsDesc(resultHeader.getResultDesc());
 
-                    LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
-                    LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
+                    LOGGER.log(Level.INFO, "OCS-RESP-DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
+                    LOGGER.log(Level.INFO, "OCS-RESP-CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
 
                     //send subscription failure message
                     if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
-                        //roll-back transcation on AM
-                        //send notifaction message
-                        SMSClient.send_sms(msisdn, resultHeader.getResultDesc());
+
+                        LOGGER.log(Level.INFO, "SENDING-FOR-RETRY | {0}", msisdn);
+
+                        int currentRetryCount = retryRequest.getCurrentRetryCount();
+
+                        if (currentRetryCount < MAX_RETRY_COUNT) {
+
+                            retryRequest.setCurrentRetryCount(++currentRetryCount);
+
+                            new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
+                        } else {
+                            SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id " + retryRequest.getExternalId());
+                        }
+
                     }
 
                 } catch (RemoteException | ServiceException ex) {
@@ -366,7 +377,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
                 retryRequest.setCurrentRetryCount(++currentRetryCount);
 
-                new RetryRequestFileHandler().writeRetryTransaction(retryRequest);
+                new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
             } else {
                 SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id " + retryRequest.getExternalId());
             }

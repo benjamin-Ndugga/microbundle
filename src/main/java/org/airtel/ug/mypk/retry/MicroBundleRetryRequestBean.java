@@ -17,20 +17,22 @@ import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
  */
 @Startup
 @Singleton
-public class RetryRequestBean {
+public class MicroBundleRetryRequestBean {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
+    private static final Logger LOGGER = Logger.getLogger(MicroBundleRetryRequestBean.class.getName());
+
+    
 
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
 
-    @Schedule(second = "0", minute = "*/1", hour = "*", info = "retry_request_processor", persistent = false)
+    @Schedule(second = "0", minute = "*/1", hour = "*", info = "micro_bundle_retry", persistent = false)
     public void process() {
         try {
 
             LOGGER.log(Level.INFO, "CHECKING-PENDING-REQUESTS-AT {0}", new Date());
 
-            List<RetryRequest> retryRequests = new RetryRequestFileHandler().readRetryTransactions();
+            List<MicroBundleRetryRequest> retryRequests = new MicroBundleRetryRequestFileHandler().readRetryTransactions();
 
             if (retryRequests.isEmpty()) {
 

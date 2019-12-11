@@ -7,7 +7,7 @@ import java.io.Serializable;
  *
  * @author Benjamin E Ndugga
  */
-public class RetryRequest implements Serializable {
+public class MicroBundleRetryRequest implements Serializable {
 
     private String msisdn, sessionId, sourceIp, externalId, imsi;
     private int optionId, currentRetryCount = 1;
@@ -20,7 +20,7 @@ public class RetryRequest implements Serializable {
         this.imsi = imsi;
     }
 
-    public RetryRequest() {
+    public MicroBundleRetryRequest() {
     }
 
     public int getCurrentRetryCount() {
@@ -73,9 +73,10 @@ public class RetryRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "RetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", currentRetryCount=" + currentRetryCount + '}';
+        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", currentRetryCount=" + currentRetryCount + '}';
     }
 
+    
     
 
 }

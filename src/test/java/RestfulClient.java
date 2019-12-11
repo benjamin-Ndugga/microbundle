@@ -226,6 +226,8 @@ public class RestfulClient {
 
             return responseTxt;
 
+        } catch (MyPakalastBundleException ex) {
+            Logger.getLogger(RestfulClient.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
 
             if (ic != null) {
@@ -236,6 +238,7 @@ public class RestfulClient {
                 }
             }
         }
+        return null;
     }//end of process request
 
     private String processUssdRequest(HttpServletRequest request, HttpServletResponse response, String MSISDN, String SESSIONID, String TYPE, String IMSI, String INPUT) {
@@ -404,6 +407,8 @@ public class RestfulClient {
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 
             return responseTxt;
+        } catch (MyPakalastBundleException ex) {
+            Logger.getLogger(RestfulClient.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
 
             if (ic != null) {
@@ -414,6 +419,7 @@ public class RestfulClient {
                 }
             }
         }
+        return null;
     }//end of process request
 
 }

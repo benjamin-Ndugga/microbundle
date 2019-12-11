@@ -22,9 +22,10 @@ import java.util.stream.Stream;
  *
  * @author Benjamin E Ndugga
  */
-public class RetryRequestFileHandler {
+public class MicroBundleRetryRequestFileHandler {
 
-    private static final Logger LOGGER = Logger.getLogger("RETRY-FILE-HANDLER");
+    private static final Logger LOGGER = Logger.getLogger(MicroBundleRetryRequestFileHandler.class.getName());
+
     private static final String RETRY_FILE_PATH = "/u01/retry/mypakalast/";
     private static final int FILE_AGE_IN_MINS = 2;
     private static final int MAX_FILE_COUNT = 100;
@@ -58,7 +59,7 @@ public class RetryRequestFileHandler {
      *
      * @param retryRequest
      */
-    public void writeRetryTransaction(RetryRequest retryRequest) {
+    public void writeRetryTransaction(MicroBundleRetryRequest retryRequest) {
 
         LOGGER.log(Level.INFO, "WRITING-FILE-PATH: " + RETRY_FILE_PATH);
         LOGGER.log(Level.INFO, "RETRY-CONTENT: {0}", retryRequest);
@@ -94,13 +95,13 @@ public class RetryRequestFileHandler {
      *
      * @return list of files that are to be processed
      */
-    public List<RetryRequest> readRetryTransactions() {
+    public List<MicroBundleRetryRequest> readRetryTransactions() {
 
         LOGGER.log(Level.INFO, "READING-FILE-PATH: " + RETRY_FILE_PATH);
 
         try (Stream<Path> filesStream = Files.list(Paths.get(RETRY_FILE_PATH))) {
 
-            List<RetryRequest> list = filesStream
+            List<MicroBundleRetryRequest> list = filesStream
                     .filter((Path path) -> {
                         try {
                             BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
@@ -128,7 +129,7 @@ public class RetryRequestFileHandler {
                     oi = new ObjectInputStream(fi);
 
                     // Read objects
-                    RetryRequest retryRequest = (RetryRequest) oi.readObject();
+                    MicroBundleRetryRequest retryRequest = (MicroBundleRetryRequest) oi.readObject();
 
                     LOGGER.log(Level.INFO, "READ-RETRY-OBJECT: {0}", retryRequest.toString());
 

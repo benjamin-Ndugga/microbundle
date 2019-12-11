@@ -13,7 +13,7 @@ import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_SUCCES
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.util.MicroBundleHzClient;
-import org.airtel.ug.mypk.retry.RetryRequest;
+import org.airtel.ug.mypk.retry.MicroBundleRetryRequest;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
 
@@ -25,9 +25,9 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
 
     private  static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
     
-    private RetryRequest retryRequest = null;
+    private MicroBundleRetryRequest retryRequest = null;
 
-    public RetryProcessor(RetryRequest retryRequest) {
+    public RetryProcessor(MicroBundleRetryRequest retryRequest) {
 
         super();
 
