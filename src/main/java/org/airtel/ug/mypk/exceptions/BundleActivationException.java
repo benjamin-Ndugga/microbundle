@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.am;
+package org.airtel.ug.mypk.exceptions;
 
 /**
  *

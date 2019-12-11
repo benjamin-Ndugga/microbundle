@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.service;
+package org.airtel.ug.mypk.controllers;
 
 import org.airtel.ug.mypk.util.SMSClient;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
@@ -9,25 +9,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.rpc.ServiceException;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
+import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.MOBIQUITY_SUCCESS_CODE;
+import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_OPERATOR_ID;
+import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_SUCCESS_CODE;
 import org.airtel.ug.mypk.exceptions.DebitAccountException;
+import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.exceptions.SubscribeBundleException;
 import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.retry.RetryRequest;
 import org.airtel.ug.mypk.retry.RetryRequestFileHandler;
-import org.airtel.ug.mypk.util.HzClient;
-import org.airtel.ug.mypk.util.MyPakalastBundleException;
-import org.airtel.ug.mypk.util.MicroBundleProcessorUtil;
+import org.airtel.ug.mypk.util.MicroBundleHzClient;
 import org.ibm.ws.OCSWebMethods;
 
 /**
  *
  * @author Benjamin E Ndugga
  */
-public class RequestProcessor extends MicroBundleProcessorUtil implements Runnable {
+public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPK");
+    private static final Logger LOGGER = Logger.getLogger(MicroBundleRequestProcessor.class.getName());
 
     private final String msisdn;
     private final String sessionId;
@@ -38,7 +40,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
     private String pin = null;
     private RetryRequest retryRequest = null;
 
-    public RequestProcessor(RetryRequest retryRequest) {
+    public MicroBundleRequestProcessor(RetryRequest retryRequest) {
         this.retryRequest = retryRequest;
 
         this.msisdn = retryRequest.getMsisdn();
@@ -53,7 +55,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
         LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
     }
 
-    public RequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
+    public MicroBundleRequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
 
         this.msisdn = msisdn;
         this.sessionId = sessionId;
@@ -72,7 +74,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
         LOGGER.log(Level.INFO, "SUBSCRIBE-USING-AT | {0}", msisdn);
 
-        HzClient hzClient = new HzClient();
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
         String internalSessionId;
         try {
 
@@ -143,7 +145,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
             logRequest();
 
             //clear session data
-            hzClient.clearSessionData(msisdn);
+            //hzClient.clearSessionData(msisdn);
         }
     }
 
@@ -151,7 +153,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
 
         LOGGER.log(Level.INFO, "SUBSCRIBE-USING-AM | {0}", msisdn);
 
-        HzClient hzClient = new HzClient();
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
         String internalSessionId = null;
         try {
 
@@ -262,7 +264,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
             logRequest();
 
             //clear session data
-            hzClient.clearSessionData(msisdn);
+            //hzClient.clearSessionData(msisdn);
         }
 
     }
@@ -287,7 +289,7 @@ public class RequestProcessor extends MicroBundleProcessorUtil implements Runnab
             LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
 
             //get the band for this customer
-            int band_id = new HzClient().getBand(msisdn);
+            int band_id = new MicroBundleHzClient().getBand(msisdn);
 
             requestLog.setBand_id(band_id);
 

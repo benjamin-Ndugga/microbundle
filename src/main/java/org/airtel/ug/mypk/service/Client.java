@@ -17,10 +17,11 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.util.HzClient;
-import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.util.MicroBundleHzClient;
 
 /**
  * 10-Dec-2018 written in support based on the ARPU for voice subscribers
@@ -56,7 +57,7 @@ public class Client extends HttpServlet {
         String IMSI = request.getParameter("IMSI");
         String INPUT = request.getParameter("INPUT");
 
-        HzClient hzClient = new HzClient();
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
 
         try {
 
@@ -139,7 +140,7 @@ public class Client extends HttpServlet {
 
                     validateBundleSelected(Integer.parseInt(INPUT));
 
-                    hzClient.saveOptionId(SESSIONID, Integer.parseInt(INPUT));
+                    hzClient.saveOptionIdAsync(SESSIONID, Integer.parseInt(INPUT));
 
                     LOGGER.log(Level.INFO, "PROMPT-BILLING-OPTION | {0}", MSISDN);
 
@@ -161,7 +162,7 @@ public class Client extends HttpServlet {
                     //if the billingOption/INPUT is 1 then save and prompt for the PIN 
                     if (INPUT.equals("1")) {
 
-                        hzClient.saveBillingOption(SESSIONID, Integer.parseInt(INPUT));
+                        hzClient.saveBillingOptionAsync(SESSIONID, Integer.parseInt(INPUT));
 
                         LOGGER.log(Level.INFO, "PROMPT-PIN | {0}", MSISDN);
 
@@ -194,7 +195,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.submit(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
+                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -204,7 +205,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
+                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
         } catch (NumberFormatException ex) {

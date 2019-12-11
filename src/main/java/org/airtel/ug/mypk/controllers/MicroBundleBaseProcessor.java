@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.util;
+package org.airtel.ug.mypk.controllers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +24,9 @@ import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.airtel.ug.mypk.exceptions.DebitAccountException;
 import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.pojo.RequestLog;
+import org.airtel.ug.mypk.util.HostNameVerifier;
+import org.airtel.ug.mypk.util.SMSClient;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -31,7 +34,7 @@ import org.xml.sax.SAXException;
  *
  * @author Benjamin E Ndugga
  */
-public class MicroBundleProcessorUtil {
+public class MicroBundleBaseProcessor {
 
     private static final Logger LOGGER = Logger.getLogger("MYPK");
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
@@ -49,7 +52,7 @@ public class MicroBundleProcessorUtil {
 
     }
 
-    public MicroBundleProcessorUtil() {
+    public MicroBundleBaseProcessor() {
         InitialContext ctx = null;
 
         try {

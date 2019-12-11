@@ -1,6 +1,5 @@
 
-import java.util.UUID;
-import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 
 /*
  * To change this license header, choose License Headers in Project Properties.

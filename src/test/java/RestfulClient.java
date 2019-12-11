@@ -17,11 +17,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.service.RequestProcessor;
-import org.airtel.ug.mypk.util.HzClient;
-import org.airtel.ug.mypk.util.MyPakalastBundleException;
+import org.airtel.ug.mypk.util.MicroBundleHzClient;
 
 
 /**
@@ -106,7 +106,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        HzClient hzClient = new HzClient();
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
 
         String responseTxt = "";
 
@@ -197,21 +197,11 @@ public class RestfulClient {
 
                 responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
 
                 return responseTxt;
 
             }
-        } catch (MyPakalastBundleException ex) {
-
-            response.setHeader("Cont", "FB");
-
-            responseTxt += ex.getLocalizedMessage();
-
-            hzClient.clearSessionData(MSISDN);
-
-            return responseTxt;
-
         } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NamingException ex) {
 
             response.setHeader("Cont", "FB");
@@ -252,7 +242,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        HzClient hzClient = new HzClient();
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
 
         String responseTxt = "";
 
@@ -385,7 +375,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
+                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
 
                     return responseTxt;
 
@@ -397,22 +387,12 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
 
                     return responseTxt;
                 }
 
             }
-        } catch (MyPakalastBundleException ex) {
-
-            response.setHeader("Cont", "FB");
-
-            responseTxt += ex.getLocalizedMessage();
-
-            hzClient.clearSessionData(MSISDN);
-
-            return responseTxt;
-
         } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NumberFormatException | NamingException ex) {
 
             response.setHeader("Cont", "FB");

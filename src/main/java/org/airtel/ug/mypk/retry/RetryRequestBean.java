@@ -9,7 +9,7 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedExecutorService;
-import org.airtel.ug.mypk.service.RequestProcessor;
+import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 
 /**
  *
@@ -41,7 +41,7 @@ public class RetryRequestBean {
 
             retryRequests.forEach((retryRequest) -> {
                 LOGGER.log(Level.INFO, "SUMBITTING >>> {0}", retryRequest);
-                mes.submit(new RequestProcessor(retryRequest));
+                mes.submit(new MicroBundleRequestProcessor(retryRequest));
             });
 
         } catch (Exception ex) {

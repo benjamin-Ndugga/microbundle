@@ -8,20 +8,23 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 /**
  *
- * @author benjamin
+ * @author Benjamin E Ndugga
  */
-public class HzClient {
+public class MicroBundleHzClient {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPK_HZ");
+    private static final Logger LOGGER = Logger.getLogger(MicroBundleHzClient.class.getName());
+
+    
     private static final int DEFAULT_BAND = 10;
     private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
-    private static final String OPTION_ID_MAP_NAME = "pnp.optionid";
-    private static final String BILLING_OPTION_MAP_NAME = "pnp.billingoption";
+    private static final String OPTION_ID_MAP_NAME = "mypk.optionid";
+    private static final String BILLING_OPTION_MAP_NAME = "mypk.billingoption";
 
     /**
      * return the band that belongs to the subscriber
@@ -132,6 +135,55 @@ public class HzClient {
     }
 
     /**
+     *
+     * @param sessionId
+     * @param optionId
+     * @throws NullPointerException
+     * @throws IllegalStateException
+     */
+    public void saveOptionIdAsync(String sessionId, int optionId) {
+
+        InitialContext ctx = null;
+        try {
+            ctx = new InitialContext();
+            ManagedExecutorService mes = (ManagedExecutorService) ctx.lookup("concurrent/mypakalast");
+
+            mes.submit(() -> {
+
+                HazelcastInstance client = null;
+                try {
+
+                    LOGGER.log(Level.INFO, "SAVING-OPTION-ID: {0} | {1}", new Object[]{optionId, sessionId});
+
+                    client = connectToHzInstance();
+
+                    //get the option id
+                    IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
+
+                    map.put(sessionId, optionId);
+
+                } catch (IllegalStateException | NamingException ex) {
+                    LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+                } finally {
+                    if (client != null) {
+                        client.shutdown();
+                    }
+                }
+            });
+        } catch (NamingException ex) {
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+        } finally {
+            try {
+                if (ctx != null) {
+                    ctx.close();
+                }
+            } catch (NamingException ex) {
+                LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            }
+        }
+    }
+
+    /**
      * returns the billing option for the subscriber
      *
      * @param msisdn the requesting subscriber
@@ -196,7 +248,51 @@ public class HzClient {
         }
     }
 
+    public void saveBillingOptionAsync(String sessionId, int billingOption) {
+
+        InitialContext ctx = null;
+        try {
+            ctx = new InitialContext();
+            ManagedExecutorService mes = (ManagedExecutorService) ctx.lookup("concurrent/mypakalast");
+
+            mes.submit(() -> {
+
+                HazelcastInstance client = null;
+                try {
+
+                    LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION: {0} | {1}", new Object[]{billingOption, sessionId});
+
+                    client = connectToHzInstance();
+                    //get the option id
+                    IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
+
+                    map.put(sessionId, billingOption);
+
+                } catch (IllegalStateException | NamingException ex) {
+                    LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+                } finally {
+                    if (client != null) {
+                        client.shutdown();
+                    }
+                }
+            });
+
+        } catch (NamingException ex) {
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+        } finally {
+            if (ctx != null) {
+                try {
+                    ctx.close();
+                } catch (NamingException ex) {
+                    LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+                }
+            }
+        }
+    }
+
     /**
+     *
+     *
      * clears session data for the requesting customer
      *
      * @param sessionId the requesting customer
