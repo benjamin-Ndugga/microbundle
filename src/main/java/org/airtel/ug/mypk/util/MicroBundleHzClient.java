@@ -20,7 +20,6 @@ public class MicroBundleHzClient {
 
     private static final Logger LOGGER = Logger.getLogger(MicroBundleHzClient.class.getName());
 
-    
     private static final int DEFAULT_BAND = 10;
     private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
     private static final String OPTION_ID_MAP_NAME = "mypk.optionid";
@@ -91,11 +90,7 @@ public class MicroBundleHzClient {
 
             LOGGER.log(Level.INFO, "OPTION-ID-VALUE-FOUND: {0} | {1}", new Object[]{i, sessionId});
 
-            if (i == null) {
-                return null;
-            } else {
-                return i;
-            }
+            return i;
 
         } catch (NullPointerException ex) {
             return null;
@@ -250,6 +245,8 @@ public class MicroBundleHzClient {
 
     public void saveBillingOptionAsync(String sessionId, int billingOption) {
 
+        LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION-ANSYNC: {0} | {1}", new Object[]{billingOption, sessionId});
+
         InitialContext ctx = null;
         try {
             ctx = new InitialContext();
@@ -259,8 +256,6 @@ public class MicroBundleHzClient {
 
                 HazelcastInstance client = null;
                 try {
-
-                    LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION: {0} | {1}", new Object[]{billingOption, sessionId});
 
                     client = connectToHzInstance();
                     //get the option id

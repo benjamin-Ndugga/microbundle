@@ -201,33 +201,34 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
                 SubscribeAppendantProductRequestProduct[] productList = {prod1};
 
-                ResultHeader resultHeader = null;
+                
 
-                try {
+                OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
+                requestLog.setRequestSerial(internalSessionId);
 
-                    OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
-                    requestLog.setRequestSerial(internalSessionId);
+                ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN", internalSessionId).getResultHeader();
 
-                    resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN", internalSessionId).getResultHeader();
+                requestLog.setOcsResp(resultHeader.getResultCode());
+                requestLog.setOcsDesc(resultHeader.getResultDesc());
 
-                    requestLog.setOcsResp(resultHeader.getResultCode());
-                    requestLog.setOcsDesc(resultHeader.getResultDesc());
-
-                    LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
-                    LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
-
-                } catch (RemoteException | ServiceException ex) {
-
-                    throw new SubscribeBundleException("OCS: " + ex.getLocalizedMessage());
-                }
+                LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
+                LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
 
                 //send subscription failure message
                 if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
 
-                    //send notifaction message
-                    SMSClient.send_sms(msisdn, resultHeader.getResultDesc());
                     //send failure for retry
+                    MicroBundleRetryRequest microBundleRetryRequest = new MicroBundleRetryRequest();
+                    
+                    microBundleRetryRequest.setMsisdn(msisdn);
+                    microBundleRetryRequest.setSessionId(sessionId);
+                    microBundleRetryRequest.setExternalId(internalSessionId);
+                    microBundleRetryRequest.setOptionId(optionId);
+                    microBundleRetryRequest.setSourceIp(sourceIp);
+                    microBundleRetryRequest.setImsi(imsi);
 
+                    new MicroBundleRetryRequestFileHandler()
+                            .writeRetryTransaction(microBundleRetryRequest);
                 }
 
             } else {
@@ -241,7 +242,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
             LOGGER.log(Level.INFO, ex.getLocalizedMessage() + " | " + msisdn, ex);
 
-        } catch (DebitAccountException | SubscribeBundleException ex) {
+        } catch (DebitAccountException | ServiceException | RemoteException ex) {
 
             SMSClient.send_sms(msisdn, "Your request is being processed at the moment, please wait for a confirmation sms.");
 
@@ -249,15 +250,16 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
             requestLog.setException_str(ex.getLocalizedMessage());
 
-            MicroBundleRetryRequest rt = new MicroBundleRetryRequest();
-            rt.setMsisdn(msisdn);
-            rt.setSessionId(sessionId);
-            rt.setExternalId(internalSessionId);
-            rt.setOptionId(optionId);
-            rt.setSourceIp(sourceIp);
-            rt.setImsi(imsi);
+            MicroBundleRetryRequest microBundleRetryRequest = new MicroBundleRetryRequest();
+            microBundleRetryRequest.setMsisdn(msisdn);
+            microBundleRetryRequest.setSessionId(sessionId);
+            microBundleRetryRequest.setExternalId(internalSessionId);
+            microBundleRetryRequest.setOptionId(optionId);
+            microBundleRetryRequest.setSourceIp(sourceIp);
+            microBundleRetryRequest.setImsi(imsi);
 
-            new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
+            new MicroBundleRetryRequestFileHandler()
+                    .writeRetryTransaction(microBundleRetryRequest);
 
         } finally {
 
