@@ -18,7 +18,7 @@ public class HZInstanceProducer {
     @Produces
     @Singleton
     public HazelcastInstance createHazelcastInstance() {
-        
+
         LOGGER.log(Level.INFO, "INIT-TO-HZ-INSTANCE");
 
         return HazelcastClient.newHazelcastClient();

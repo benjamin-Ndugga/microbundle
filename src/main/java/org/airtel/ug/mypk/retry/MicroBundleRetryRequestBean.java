@@ -32,6 +32,9 @@ public class MicroBundleRetryRequestBean {
     @Schedule(second = "0", minute = "*/1", hour = "*", info = "micro_bundle_retry", persistent = false)
     public void process() {
         try {
+            
+            LOGGER.log(Level.INFO, "CONNECTED-TO >>> | {0}", client.getName());
+            
 
             LOGGER.log(Level.INFO, "CHECKING-PENDING-REQUESTS-AT {0}", new Date());
 

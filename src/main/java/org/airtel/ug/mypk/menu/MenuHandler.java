@@ -15,11 +15,11 @@ import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 
 /**
  *
- * @author benjamin
+ * @author Benjamin E Ndugga
  */
 public class MenuHandler {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPK");
+    private static final Logger LOGGER = Logger.getLogger(MenuHandler.class.getName());
 
     private static final ArrayList<MenuItem> MENU_LIST = new ArrayList<>();
 
@@ -94,8 +94,7 @@ public class MenuHandler {
                 .forEachOrdered((menuItem) -> {
                     menu_to_display.add(menuItem);
                 });
-        
-       
+
         if (menu_to_display.isEmpty()) {
             //throw new MyPakalastBundleException("Failed to process request can not categorise Your Number");
             throw new MyPakalastBundleException("You are ineligible for this service.Dial *149# to select another bundle of your choice.");
