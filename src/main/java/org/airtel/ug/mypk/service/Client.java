@@ -130,11 +130,13 @@ public class Client extends HttpServlet {
 
             } else {
 
-                LOGGER.log(Level.INFO, "CHECK-OPTION-ID | {0}", MSISDN);
+                LOGGER.log(Level.INFO, "FETCH-OPTION-ID | {0}", MSISDN);
 
                 //check if this is continuing from 1st menu
                 Integer optionId = microBundleHzClient.getOptionId(SESSIONID);
 
+                LOGGER.log(Level.INFO, "OPTION-ID: {0} | {1}", new Object[]{optionId, MSISDN});
+                
                 //if there is no optionId, save the optionId and prompt for the billing option
                 if (optionId == null) {
 

@@ -81,6 +81,8 @@ public class MicroBundleHzClient {
         HazelcastInstance client = null;
         try {
 
+            LOGGER.log(Level.INFO, "CONNECT-TO-HZ-INSTANCE | {0}", sessionId);
+            
             client = connectToHzInstance();
 
             //get the option id
@@ -404,7 +406,7 @@ public class MicroBundleHzClient {
 
             networkConfig.setSmartRouting(true);
             networkConfig.setConnectionTimeout(1000);
-            networkConfig.setConnectionAttemptPeriod(0);
+            networkConfig.setConnectionAttemptPeriod(2000);
             networkConfig.setConnectionAttemptLimit(1);
             clientConfig.setNetworkConfig(networkConfig);
 
