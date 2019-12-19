@@ -4,7 +4,7 @@
 
     <groupId>org.airtel.ug</groupId>
     <artifactId>MICROBUNDLE</artifactId>
-    <version>2.1</version>
+    <version>2.2</version>
     <packaging>war</packaging>
 
     <name>MICROBUNDLE</name>

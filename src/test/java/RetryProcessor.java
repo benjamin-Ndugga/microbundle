@@ -1,10 +1,12 @@
 
 
+import com.hazelcast.core.HazelcastInstance;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor;
 import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.MOBIQUITY_SUCCESS_CODE;
@@ -26,6 +28,9 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
     private  static final Logger LOGGER = Logger.getLogger("MYPK_EJB");
     
     private MicroBundleRetryRequest retryRequest = null;
+    
+    @Inject
+    private HazelcastInstance client;
 
     public RetryProcessor(MicroBundleRetryRequest retryRequest) {
 
@@ -43,7 +48,7 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
     @Override
     public final void run() {
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient();
+        MicroBundleHzClient hzClient = new MicroBundleHzClient(client);
 
         String msisdn = retryRequest.getMsisdn();
         String sessionId = retryRequest.getSessionId();

@@ -1,5 +1,5 @@
-package org.airtel.ug.mypk.service;
 
+import com.hazelcast.core.HazelcastInstance;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.naming.InitialContext;
+import javax.inject.Inject;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,13 +28,19 @@ import org.airtel.ug.mypk.util.MicroBundleHzClient;
  *
  * @author benjamin
  */
-@WebServlet(urlPatterns = "/Client")
+//@WebServlet(urlPatterns = "/Client")
 public class Client extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
 
+    @Inject
+    private HazelcastInstance client;
+
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
+
+    @Resource(lookup = "resource/ppimsis")
+    private String ppImsis;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -49,7 +55,7 @@ public class Client extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        InitialContext ic = null;
+        //InitialContext ic = null;
 
         String MSISDN = request.getParameter("MSISDN");
         String SESSIONID = request.getParameter("SESSIONID");
@@ -57,8 +63,7 @@ public class Client extends HttpServlet {
         String IMSI = request.getParameter("IMSI");
         String INPUT = request.getParameter("INPUT");
 
-        MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
-
+        MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient(client);
         try {
 
             LOGGER.log(Level.INFO, "SESSIONID >>> {0} | {1}", new Object[]{SESSIONID, MSISDN});
@@ -68,8 +73,8 @@ public class Client extends HttpServlet {
 
             //************************************************************
             //retrive post-paid imsis
-            ic = new InitialContext();
-            String ppImsis = (String) ic.lookup("resource/ppimsis");
+            //ic = new InitialContext();
+            //String ppImsis = (String) ic.lookup("resource/ppimsis");
 
             String[] imsi_list = ppImsis.split("\\,");
 
@@ -136,7 +141,7 @@ public class Client extends HttpServlet {
                 Integer optionId = microBundleHzClient.getOptionId(SESSIONID);
 
                 LOGGER.log(Level.INFO, "OPTION-ID: {0} | {1}", new Object[]{optionId, MSISDN});
-                
+
                 //if there is no optionId, save the optionId and prompt for the billing option
                 if (optionId == null) {
 
@@ -195,7 +200,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
+                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null,client));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -205,7 +210,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
+                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT,client));
                 }
             }
         } catch (NumberFormatException ex) {
@@ -240,14 +245,6 @@ public class Client extends HttpServlet {
 
         } finally {
             out.close();
-
-            if (ic != null) {
-                try {
-                    ic.close();
-                } catch (NamingException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
-            }
         }
     }//end of process request
 
@@ -259,6 +256,14 @@ public class Client extends HttpServlet {
             LOGGER.log(Level.INFO, "INVALID-CHOICE-SELECTED >> {0}", input);
             throw new MyPakalastBundleException("Invalid choice please choose between options 1-3.");
         }
+    }
+
+    @PreDestroy
+    public void close() {
+
+        LOGGER.log(Level.INFO, "SHUT-DOWN-HZ-INSTANCE");
+
+        client.shutdown();
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
