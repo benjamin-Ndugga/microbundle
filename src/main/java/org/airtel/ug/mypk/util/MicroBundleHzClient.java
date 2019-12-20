@@ -1,6 +1,5 @@
 package org.airtel.ug.mypk.util;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,6 +7,7 @@ import javax.enterprise.concurrent.ManagedExecutorService;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import static org.airtel.ug.mypk.util.HZInstanceProducer.HAZELCAST_INSTANCE;
 
 /**
  *
@@ -21,12 +21,6 @@ public class MicroBundleHzClient {
     private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
     private static final String OPTION_ID_MAP_NAME = "mypk.optionid";
     private static final String BILLING_OPTION_MAP_NAME = "mypk.billingoption";
-
-    private final HazelcastInstance client;
-
-    public MicroBundleHzClient(HazelcastInstance client) {
-        this.client = client;
-    }
 
     /**
      * return the band that belongs to the subscriber
@@ -42,7 +36,7 @@ public class MicroBundleHzClient {
             //connect to the hazlecast IMDG
             //client = connectToHzInstance();
             //get the map for imsis
-            IMap<String, Integer> map = client.getMap(MICRO_BUNDLE_MAP_NAME);
+            IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(MICRO_BUNDLE_MAP_NAME);
 
             Integer band_found = map.get(msisdn);
 
@@ -76,13 +70,13 @@ public class MicroBundleHzClient {
      * @throws NamingException
      */
     public Integer getOptionId(String sessionId) throws NullPointerException, IllegalStateException, NamingException {
-        
+
         try {
 
             //LOGGER.log(Level.INFO, "CONNECT-TO-HZ-INSTANCE | {0}", sessionId);
             //client = connectToHzInstance();
             //get the option id
-            IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
+            IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(OPTION_ID_MAP_NAME);
 
             Integer i = map.get(sessionId);
 
@@ -103,14 +97,14 @@ public class MicroBundleHzClient {
      * @throws IllegalStateException
      */
     public void saveOptionId(String sessionId, int optionId) {
-        
+
         try {
 
             LOGGER.log(Level.INFO, "SAVING-OPTION-ID: {0} | {1}", new Object[]{optionId, sessionId});
 
             //client = connectToHzInstance();
             //get the option id
-            IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
+            IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(OPTION_ID_MAP_NAME);
 
             map.put(sessionId, optionId);
 
@@ -141,7 +135,7 @@ public class MicroBundleHzClient {
 
                     //client = connectToHzInstance();
                     //get the option id
-                    IMap<String, Integer> map = client.getMap(OPTION_ID_MAP_NAME);
+                    IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(OPTION_ID_MAP_NAME);
 
                     map.put(sessionId, optionId);
 
@@ -174,14 +168,13 @@ public class MicroBundleHzClient {
      */
     public Integer getBillingOption(String msisdn) throws IllegalStateException, NamingException {
 
-        
         try {
 
             LOGGER.log(Level.INFO, "CHECK-BILLING-OPTION | {0}", msisdn);
 
             //client = connectToHzInstance();
             //get the billing option
-            IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
+            IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(BILLING_OPTION_MAP_NAME);
 
             Integer i = map.get(msisdn);
 
@@ -202,14 +195,14 @@ public class MicroBundleHzClient {
      * @throws NamingException
      */
     public void saveBillingOption(String sessionId, int billingOption) throws IllegalStateException, NamingException {
-        
+
         try {
 
             LOGGER.log(Level.INFO, "SAVE-BILLING-OPTION: {0} | {1}", new Object[]{billingOption, sessionId});
 
             //client = connectToHzInstance();
             //get the option id
-            IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
+            IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(BILLING_OPTION_MAP_NAME);
 
             map.put(sessionId, billingOption);
 
@@ -232,7 +225,7 @@ public class MicroBundleHzClient {
 
                     //client = connectToHzInstance();
                     //get the option id
-                    IMap<String, Integer> map = client.getMap(BILLING_OPTION_MAP_NAME);
+                    IMap<String, Integer> map = HAZELCAST_INSTANCE.getMap(BILLING_OPTION_MAP_NAME);
 
                     map.put(sessionId, billingOption);
 
@@ -268,11 +261,11 @@ public class MicroBundleHzClient {
         try {
             //client = connectToHzInstance();
             //get the option id
-            IMap<String, Integer> mapOptionId = client.getMap(OPTION_ID_MAP_NAME);
+            IMap<String, Integer> mapOptionId = HAZELCAST_INSTANCE.getMap(OPTION_ID_MAP_NAME);
             Integer foundOptionId = mapOptionId.remove(sessionId);
             LOGGER.log(Level.INFO, "REMOVE-OPTION-ID: {0} | {1}", new Object[]{foundOptionId, sessionId});
 
-            IMap<String, Integer> mapBillingOption = client.getMap(BILLING_OPTION_MAP_NAME);
+            IMap<String, Integer> mapBillingOption = HAZELCAST_INSTANCE.getMap(BILLING_OPTION_MAP_NAME);
             Integer foundBillingOption = mapBillingOption.remove(sessionId);
             LOGGER.log(Level.INFO, "REMOVE-BILLING-OPTION: {0} | {1}", new Object[]{foundBillingOption, sessionId});
 

@@ -106,7 +106,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient(null);
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
 
         String responseTxt = "";
 
@@ -197,7 +197,7 @@ public class RestfulClient {
 
                 responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT,null)).start();
+                new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
 
                 return responseTxt;
 
@@ -245,7 +245,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient(null);
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
 
         String responseTxt = "";
 
@@ -378,7 +378,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null,null)).start();
+                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
 
                     return responseTxt;
 
@@ -390,7 +390,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT,null)).start();
+                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
 
                     return responseTxt;
                 }

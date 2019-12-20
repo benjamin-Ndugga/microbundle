@@ -29,8 +29,7 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
     
     private MicroBundleRetryRequest retryRequest = null;
     
-    @Inject
-    private HazelcastInstance client;
+    
 
     public RetryProcessor(MicroBundleRetryRequest retryRequest) {
 
@@ -48,7 +47,7 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
     @Override
     public final void run() {
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient(client);
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
 
         String msisdn = retryRequest.getMsisdn();
         String sessionId = retryRequest.getSessionId();

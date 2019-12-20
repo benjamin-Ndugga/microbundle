@@ -1,6 +1,5 @@
 package org.airtel.ug.mypk.service;
 
-import com.hazelcast.core.HazelcastInstance;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -8,10 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -32,8 +29,6 @@ public class MicroBundleServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(MicroBundleServlet.class.getName());
 
-    @Inject
-    private HazelcastInstance client;
 
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
@@ -73,7 +68,7 @@ public class MicroBundleServlet extends HttpServlet {
                 return;
             }
 
-            MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient(client);
+            MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
 
             //for first time freeflow control request flash a Menu
             if (TYPE.equals("1")) {
@@ -169,7 +164,7 @@ public class MicroBundleServlet extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null,client));
+                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -179,12 +174,15 @@ public class MicroBundleServlet extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT,client));
+                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
 
+        } catch (MyPakalastBundleException ex) {
+            LOGGER.log(Level.INFO, "{0} | {1}", new Object[]{ex.getLocalizedMessage(), MSISDN});
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+
         }
     }
 
@@ -245,14 +243,6 @@ public class MicroBundleServlet extends HttpServlet {
             LOGGER.log(Level.INFO, "INVALID-CHOICE-SELECTED >> {0}", input);
             throw new MyPakalastBundleException("Invalid choice please choose between options 1-3.");
         }
-    }
-
-    @PreDestroy
-    public void close() {
-
-        LOGGER.log(Level.INFO, "SHUT-DOWN-HZ-INSTANCE");
-
-        client.shutdown();
     }
 
 }

@@ -63,7 +63,7 @@ public class Client extends HttpServlet {
         String IMSI = request.getParameter("IMSI");
         String INPUT = request.getParameter("INPUT");
 
-        MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient(client);
+        MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
         try {
 
             LOGGER.log(Level.INFO, "SESSIONID >>> {0} | {1}", new Object[]{SESSIONID, MSISDN});
@@ -200,7 +200,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null,client));
+                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -210,7 +210,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT,client));
+                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
         } catch (NumberFormatException ex) {

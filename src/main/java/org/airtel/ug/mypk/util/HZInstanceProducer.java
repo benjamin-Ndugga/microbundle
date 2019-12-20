@@ -4,24 +4,36 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.enterprise.inject.Produces;
-import javax.inject.Singleton;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 
 /**
  *
  * @author Benjamin E Ndugga
  */
+@Startup
+@Singleton
 public class HZInstanceProducer {
 
     private static final Logger LOGGER = Logger.getLogger(HZInstanceProducer.class.getName());
+    public static HazelcastInstance HAZELCAST_INSTANCE;
 
-    @Produces
-    @Singleton
-    public HazelcastInstance createHazelcastInstance() {
+    @PostConstruct
+    public void createHazelcastInstance() {
 
         LOGGER.log(Level.INFO, "INIT-TO-HZ-INSTANCE");
 
-        return HazelcastClient.newHazelcastClient();
+        HAZELCAST_INSTANCE = HazelcastClient.newHazelcastClient();
+    }
+
+    @PreDestroy
+    public void close() {
+
+        LOGGER.log(Level.INFO, "SHUT-DOWN-HZ-INSTANCE-FOR-RUNNABLE");
+
+        HAZELCAST_INSTANCE.shutdown();
     }
 
 //    @Produces

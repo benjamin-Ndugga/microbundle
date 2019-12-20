@@ -1,6 +1,5 @@
 package org.airtel.ug.mypk.controllers;
 
-import com.hazelcast.core.HazelcastInstance;
 import org.airtel.ug.mypk.util.SMSClient;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
@@ -8,7 +7,6 @@ import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
 import javax.xml.rpc.ServiceException;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.MOBIQUITY_SUCCESS_CODE;
@@ -31,8 +29,6 @@ import org.ibm.ws.OCSWebMethods;
  */
 public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implements Runnable {
 
-    private final HazelcastInstance client;
-
     private static final Logger LOGGER = Logger.getLogger(MicroBundleRequestProcessor.class.getName());
 
     private final String msisdn;
@@ -44,7 +40,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
     private String pin = null;
     private MicroBundleRetryRequest retryRequest = null;
 
-    public MicroBundleRequestProcessor(MicroBundleRetryRequest retryRequest, HazelcastInstance client) {
+    public MicroBundleRequestProcessor(MicroBundleRetryRequest retryRequest) {
         this.retryRequest = retryRequest;
 
         this.msisdn = retryRequest.getMsisdn();
@@ -54,15 +50,13 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
         this.imsi = retryRequest.getImsi();
 
-        this.client = client;
         requestLog.setChannel("RETRY");
 
         LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
     }
 
-    public MicroBundleRequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin, HazelcastInstance client) {
-        this.client = client;
-        
+    public MicroBundleRequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
+
         this.msisdn = msisdn;
         this.sessionId = sessionId;
         this.optionId = optionId;
@@ -80,7 +74,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
         LOGGER.log(Level.INFO, "SUBSCRIBE-USING-AT | {0}", msisdn);
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient(client);
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
         String internalSessionId;
         try {
 
@@ -159,7 +153,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
         LOGGER.log(Level.INFO, "SUBSCRIBE-USING-AM | {0}", msisdn);
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient(client);
+        MicroBundleHzClient hzClient = new MicroBundleHzClient();
         String internalSessionId = null;
         try {
 
@@ -295,7 +289,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
 
             //get the band for this customer
-            int band_id = new MicroBundleHzClient(client).getBand(msisdn);
+            int band_id = new MicroBundleHzClient().getBand(msisdn);
 
             requestLog.setBand_id(band_id);
 
