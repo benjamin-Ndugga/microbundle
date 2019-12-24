@@ -5,7 +5,9 @@
         <password>dev-pass</password>
     </group>
     <properties>
+        <property name="hazelcast.logging.type">jdk</property>
         <property name="hazelcast.diagnostics.enabled">true</property>
+        <property name="hazelcast.client.statistics.enabled">true</property>
     </properties>
     <network>
         <cluster-members>
