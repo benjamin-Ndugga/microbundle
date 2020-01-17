@@ -233,7 +233,7 @@ public class Client extends HttpServlet {
 
             microBundleHzClient.clearSessionData(SESSIONID);
 
-        } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | NamingException | RejectedExecutionException ex) {
+        } catch (IllegalStateException | IndexOutOfBoundsException | NullPointerException | RejectedExecutionException ex) {
 
             response.setHeader("Cont", "FB");
 

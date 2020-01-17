@@ -5,10 +5,13 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.inject.Inject;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -29,12 +32,14 @@ public class MicroBundleServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(MicroBundleServlet.class.getName());
 
-
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
 
     @Resource(lookup = "resource/ppimsis")
     private String PP_IMSIS;
+
+    @Inject
+    private MicroBundleHzClient microBundleHzClient;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -44,8 +49,8 @@ public class MicroBundleServlet extends HttpServlet {
         String TYPE = request.getParameter("TYPE");
         String IMSI = request.getParameter("IMSI");
         String INPUT = request.getParameter("INPUT");
-
-        try (PrintWriter out = response.getWriter()) {
+        PrintWriter out = response.getWriter();
+        try {
 
             LOGGER.log(Level.INFO, "SESSIONID >>> {0} | {1}", new Object[]{SESSIONID, MSISDN});
             LOGGER.log(Level.INFO, "INPUT >>> {0} | {1}", new Object[]{INPUT.replaceAll("\\S", "*"), MSISDN});
@@ -68,8 +73,7 @@ public class MicroBundleServlet extends HttpServlet {
                 return;
             }
 
-            MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
-
+            //MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
             //for first time freeflow control request flash a Menu
             if (TYPE.equals("1")) {
 
@@ -109,9 +113,11 @@ public class MicroBundleServlet extends HttpServlet {
                 //if there is no optionId, save the optionId and prompt for the billing option
                 if (optionId == null) {
 
-                    validateBundleSelected(Integer.parseInt(INPUT));
+                    int user_input_val = Integer.parseInt(INPUT);
+                    
+                    validateBundleSelected(user_input_val);
 
-                    microBundleHzClient.saveOptionIdAsync(SESSIONID, Integer.parseInt(INPUT));
+                    microBundleHzClient.saveOptionIdAsync(SESSIONID, user_input_val);
 
                     LOGGER.log(Level.INFO, "PROMPT-BILLING-OPTION | {0}", MSISDN);
 
@@ -179,10 +185,19 @@ public class MicroBundleServlet extends HttpServlet {
             }
 
         } catch (MyPakalastBundleException ex) {
+
             LOGGER.log(Level.INFO, "{0} | {1}", new Object[]{ex.getLocalizedMessage(), MSISDN});
-        } catch (Exception ex) {
+
+            response.setHeader("Cont", "FB");
+            out.println(ex.getLocalizedMessage());
+
+        } catch (NumberFormatException | RejectedExecutionException ex) {
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 
+            response.setHeader("Cont", "FB");
+            out.println("Your request failed to be processed, please try again later.");
+        } finally {
+            out.close();
         }
     }
 

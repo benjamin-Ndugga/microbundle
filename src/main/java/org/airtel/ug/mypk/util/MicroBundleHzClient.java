@@ -4,6 +4,7 @@ import com.hazelcast.core.IMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.context.ApplicationScoped;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -13,6 +14,7 @@ import static org.airtel.ug.mypk.util.HZInstanceProducer.HAZELCAST_INSTANCE;
  *
  * @author Benjamin E Ndugga
  */
+@ApplicationScoped
 public class MicroBundleHzClient {
 
     private static final Logger LOGGER = Logger.getLogger(MicroBundleHzClient.class.getName());
@@ -69,7 +71,7 @@ public class MicroBundleHzClient {
      * @throws IllegalStateException
      * @throws NamingException
      */
-    public Integer getOptionId(String sessionId) throws NullPointerException, IllegalStateException, NamingException {
+    public Integer getOptionId(String sessionId) {
 
         try {
 
@@ -166,7 +168,7 @@ public class MicroBundleHzClient {
      * @throws IllegalStateException
      * @throws NamingException
      */
-    public Integer getBillingOption(String msisdn) throws IllegalStateException, NamingException {
+    public Integer getBillingOption(String msisdn) {
 
         try {
 
@@ -183,6 +185,7 @@ public class MicroBundleHzClient {
             return i;
 
         } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
             return null;
         }
     }
@@ -194,7 +197,7 @@ public class MicroBundleHzClient {
      * @throws IllegalStateException
      * @throws NamingException
      */
-    public void saveBillingOption(String sessionId, int billingOption) throws IllegalStateException, NamingException {
+    public void saveBillingOption(String sessionId, int billingOption)  {
 
         try {
 
