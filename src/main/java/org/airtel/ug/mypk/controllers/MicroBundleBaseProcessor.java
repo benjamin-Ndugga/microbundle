@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
@@ -27,6 +28,7 @@ import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.pojo.RequestLog;
 import org.airtel.ug.mypk.util.HostNameVerifier;
 import org.airtel.ug.mypk.util.SMSClient;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -279,24 +281,13 @@ public class MicroBundleBaseProcessor {
         }
     }
 
-    /**
-     *
-     * @return the internal session id for this request
-     */
     public final String generateInternalSessionId() {
-        //randomise the id
-        char alphabet[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-            'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
-            'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
-        Random random = new Random();
 
-        //String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + random.nextInt(10000000));
-        String externalId = (alphabet[random.nextInt(alphabet.length)] + "" + Math.abs(random.nextLong()));
+        String serial = RandomStringUtils.random(2, true, false).toUpperCase() + "" + Math.abs(ThreadLocalRandom.current().nextLong(1, 999999999));
 
-        LOGGER.log(Level.INFO, "INTERNAL-SESSION-ID {0} ", new Object[]{externalId});
+        LOGGER.log(Level.INFO, "GENERATE-SERIAL: {0}", serial);
 
-        return externalId;
+        return serial;
     }
 
     /**
@@ -304,9 +295,7 @@ public class MicroBundleBaseProcessor {
      * @param externalId
      * @param msisdn
      * @return
-     * @throws java.net.MalformedURLException
-     * @throws javax.xml.parsers.ParserConfigurationException
-     * @throws org.xml.sax.SAXException
+     * @throws org.airtel.ug.mypk.exceptions.TransactionStatusException
      */
     public final MobiquityReponseHandler inquireTransactionStatusOfExtId(String externalId, String msisdn) throws TransactionStatusException {
 
@@ -370,7 +359,7 @@ public class MicroBundleBaseProcessor {
 
             return mobiquityReponseHandler;
         } catch (IOException | NamingException | ParserConfigurationException | SAXException ex) {
-            throw new TransactionStatusException("Mobiquity: " + ex.getLocalizedMessage());
+            throw new TransactionStatusException("MOBIQUITY: " + ex.getLocalizedMessage());
         } finally {
             try {
                 if (output != null) {

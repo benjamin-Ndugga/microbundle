@@ -9,6 +9,7 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.inject.Inject;
 import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 
 /**
@@ -24,13 +25,16 @@ public class MicroBundleRetryRequestBean {
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
 
+    @Inject
+    private MicroBundleRetryRequestFileHandler microBundleRetryRequestFileHandler;
+
     @Schedule(second = "0", minute = "*/1", hour = "*", info = "micro_bundle_retry", persistent = false)
     public void process() {
         try {
 
             LOGGER.log(Level.INFO, "CHECKING-PENDING-REQUESTS-AT {0}", new Date());
 
-            List<MicroBundleRetryRequest> retryRequests = new MicroBundleRetryRequestFileHandler().readRetryTransactions();
+            List<MicroBundleRetryRequest> retryRequests = microBundleRetryRequestFileHandler.readRetryTransactions();
 
             if (retryRequests.isEmpty()) {
 

@@ -380,7 +380,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
                 new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
             } else {
-                SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id " + retryRequest.getExternalId());
+                SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Transaction Id: " + retryRequest.getExternalId());
             }
 
         } finally {
