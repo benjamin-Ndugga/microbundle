@@ -323,6 +323,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
                     requestLog.setRequestSerial(externalId);
 
                     ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN", externalId).getResultHeader();
+                    
                     requestLog.setOcsResp(resultHeader.getResultCode());
                     requestLog.setOcsDesc(resultHeader.getResultDesc());
 
