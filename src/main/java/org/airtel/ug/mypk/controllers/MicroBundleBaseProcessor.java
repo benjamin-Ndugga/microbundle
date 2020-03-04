@@ -281,7 +281,7 @@ public class MicroBundleBaseProcessor {
         }
     }
 
-    public final String generateInternalSessionId() {
+     public final String generateInternalSessionId() {
 
         String serial = RandomStringUtils.random(2, true, false).toUpperCase() + "" + Math.abs(ThreadLocalRandom.current().nextLong(1, 999999999));
 

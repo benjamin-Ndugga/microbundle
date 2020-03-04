@@ -284,7 +284,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             LOGGER.log(Level.INFO, "PROCESS-RETRY-REQUEST | {0}", msisdn);
 
             //delete file from the filesystem
-            new MicroBundleRetryRequestFileHandler().deletRetryFile(externalId + ".ser");
+            new MicroBundleRetryRequestFileHandler().deletRetryFile(externalId);
 
             LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
 
@@ -323,7 +323,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
                     requestLog.setRequestSerial(externalId);
 
                     ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN", externalId).getResultHeader();
-                    
+
                     requestLog.setOcsResp(resultHeader.getResultCode());
                     requestLog.setOcsDesc(resultHeader.getResultDesc());
 

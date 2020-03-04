@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
-import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
 import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
@@ -16,7 +15,6 @@ import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
  *
  * @author Benjamin E Ndugga
  */
-@Startup
 @Singleton
 public class MicroBundleRetryRequestBean {
 

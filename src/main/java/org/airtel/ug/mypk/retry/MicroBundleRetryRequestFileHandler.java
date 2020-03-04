@@ -30,6 +30,7 @@ public class MicroBundleRetryRequestFileHandler {
 
     private static final Logger LOGGER = Logger.getLogger(MicroBundleRetryRequestFileHandler.class.getName());
 
+    private static String FILE_EXTENSION = "-mypakalast.ser";
     private static final String RETRY_FILE_PATH = "/u01/retry/mypakalast/";
     private int FILE_AGE_IN_MINS = 2;
     private int MAX_FILE_COUNT = 5;
@@ -54,7 +55,7 @@ public class MicroBundleRetryRequestFileHandler {
 
         LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName);
 
-        boolean b = new File(RETRY_FILE_PATH + fileName).delete();
+        boolean b = new File(RETRY_FILE_PATH + fileName + FILE_EXTENSION).delete();
 
         LOGGER.log(Level.INFO, "FILE-DELETED: {0}", b);
     }
@@ -72,7 +73,7 @@ public class MicroBundleRetryRequestFileHandler {
         ObjectOutputStream oos = null;
         try {
 
-            fos = new FileOutputStream(new File(RETRY_FILE_PATH + retryRequest.getExternalId() + ".ser"));
+            fos = new FileOutputStream(new File(RETRY_FILE_PATH + retryRequest.getExternalId() + FILE_EXTENSION));
             oos = new ObjectOutputStream(fos);
 
             // Write objects to file
@@ -185,17 +186,17 @@ public class MicroBundleRetryRequestFileHandler {
             MAX_FILE_COUNT = (Integer) ic.lookup("resource/retry/maxfilecount");
 
             LOGGER.log(Level.INFO, "SET-FILE-AGE {0} mins.", FILE_AGE_IN_MINS);
-            LOGGER.log(Level.INFO, "SET-MAX-FILE-COUNT {0}", FILE_AGE_IN_MINS);
+            LOGGER.log(Level.INFO, "SET-MAX-FILE-COUNT {0}", MAX_FILE_COUNT);
 
         } catch (NamingException ex) {
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
         } finally {
-            if (ic != null) {
-                try {
+            try {
+                if (ic != null) {
                     ic.close();
-                } catch (NamingException ex) {
-                    LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
                 }
+            } catch (NamingException ex) {
+                LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
             }
         }
     }
