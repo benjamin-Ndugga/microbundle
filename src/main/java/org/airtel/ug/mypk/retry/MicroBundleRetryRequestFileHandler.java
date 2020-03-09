@@ -53,7 +53,7 @@ public class MicroBundleRetryRequestFileHandler {
      */
     public void deletRetryFile(String fileName) {
 
-        LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName);
+        LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName+FILE_EXTENSION);
 
         boolean b = new File(RETRY_FILE_PATH + fileName + FILE_EXTENSION).delete();
 

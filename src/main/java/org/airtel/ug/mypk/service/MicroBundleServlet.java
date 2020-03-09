@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -102,11 +103,35 @@ public class MicroBundleServlet extends HttpServlet {
                 }
 
             } else {
+                Integer optionId;
+
+                //get the source of this request
+                String src = request.getHeader("X-Real-IP");
+
+                if (src == null) {
+                    src = request.getRemoteAddr();
+                }
+
+                checkContextValueForAM();
+
+                LOGGER.log(Level.INFO, "IS-AM-OPTION-ENABLED >>> {0} | {1}", new Object[]{isAMBillingOptionEnabled, MSISDN});
+
+                if (!isAMBillingOptionEnabled) {
+
+                    optionId = Integer.parseInt(INPUT);
+
+                    response.setHeader("Cont", "FB");
+                    out.println("Your request is being processed. Please wait for a confirmation SMS.");
+
+                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
+
+                    return;
+                }
 
                 LOGGER.log(Level.INFO, "FETCH-OPTION-ID | {0}", MSISDN);
 
                 //check if this is continuing from 1st menu
-                Integer optionId = microBundleHzClient.getOptionId(SESSIONID);
+                optionId = microBundleHzClient.getOptionId(SESSIONID);
 
                 LOGGER.log(Level.INFO, "OPTION-ID: {0} | {1}", new Object[]{optionId, MSISDN});
 
@@ -114,7 +139,7 @@ public class MicroBundleServlet extends HttpServlet {
                 if (optionId == null) {
 
                     int user_input_val = Integer.parseInt(INPUT);
-                    
+
                     validateBundleSelected(user_input_val);
 
                     microBundleHzClient.saveOptionIdAsync(SESSIONID, user_input_val);
@@ -153,12 +178,6 @@ public class MicroBundleServlet extends HttpServlet {
                         //set the billingoption to deafault 2
                         billingOption = 2;
                     }
-                }
-                //get the source of this request
-                String src = request.getHeader("X-Real-IP");
-
-                if (src == null) {
-                    src = request.getRemoteAddr();
                 }
 
                 if (billingOption == 2) {
@@ -249,6 +268,33 @@ public class MicroBundleServlet extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
+
+    private boolean isAMBillingOptionEnabled =true;
+
+    private void checkContextValueForAM() {
+        InitialContext ic = null;
+        try {
+
+            ic = new InitialContext();
+
+            int value = (Integer) ic.lookup("resource/am/enabled");
+            isAMBillingOptionEnabled = (value == 1);
+
+            LOGGER.log(Level.INFO, "AM-CHANNEL-ENABLED | {0}", isAMBillingOptionEnabled);
+
+        } catch (NamingException ex) {
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+
+        } finally {
+            try {
+                if (ic != null) {
+                    ic.close();
+                }
+            } catch (NamingException ex) {
+                LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            }
+        }
+    }
 
     public void validateBundleSelected(int input) throws MyPakalastBundleException {
 
