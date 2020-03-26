@@ -28,7 +28,7 @@ public class MicroBundleRetryRequestFileHandler {
 
     private static final String RETRY_FILE_PATH = "/u01/retry/mypakalast/";
     private static final int FILE_AGE_IN_MINS = 2;
-    private static final int MAX_FILE_COUNT = 100;
+    private static final int MAX_FILE_COUNT = 2;
 
     static {
         //check if this folder has been created
