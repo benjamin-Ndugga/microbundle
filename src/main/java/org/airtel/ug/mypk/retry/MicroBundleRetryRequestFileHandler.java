@@ -17,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  *
@@ -27,8 +29,8 @@ public class MicroBundleRetryRequestFileHandler {
     private static final Logger LOGGER = Logger.getLogger(MicroBundleRetryRequestFileHandler.class.getName());
 
     private static final String RETRY_FILE_PATH = "/u01/retry/mypakalast/";
-    private static final int FILE_AGE_IN_MINS = 2;
-    private static final int MAX_FILE_COUNT = 2;
+    private int FILE_AGE_IN_MINS = 2;
+    private int MAX_FILE_COUNT = 5;
 
     static {
         //check if this folder has been created
@@ -37,6 +39,32 @@ public class MicroBundleRetryRequestFileHandler {
                 Files.createDirectories(Paths.get(RETRY_FILE_PATH));
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private void checkConfigs() {
+        InitialContext ic = null;
+        try {
+
+            LOGGER.log(Level.INFO, "LOAD-RETRY-CONFIGS");
+
+            ic = new InitialContext();
+            FILE_AGE_IN_MINS = (Integer) ic.lookup("resource/retry/fileagemins");
+            MAX_FILE_COUNT = (Integer) ic.lookup("resource/retry/maxfilecount");
+
+            LOGGER.log(Level.INFO, "SET-FILE-AGE {0} mins.", FILE_AGE_IN_MINS);
+            LOGGER.log(Level.INFO, "SET-MAX-FILE-COUNT {0}", MAX_FILE_COUNT);
+
+        } catch (NamingException ex) {
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+        } finally {
+            if (ic != null) {
+                try {
+                    ic.close();
+                } catch (NamingException ex) {
+                    LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+                }
             }
         }
     }
@@ -96,6 +124,8 @@ public class MicroBundleRetryRequestFileHandler {
      * @return list of files that are to be processed
      */
     public List<MicroBundleRetryRequest> readRetryTransactions() {
+
+        checkConfigs();
 
         LOGGER.log(Level.INFO, "READING-FILE-PATH: " + RETRY_FILE_PATH);
 
