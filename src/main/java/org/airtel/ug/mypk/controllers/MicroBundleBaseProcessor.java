@@ -38,7 +38,8 @@ import org.xml.sax.SAXException;
  */
 public class MicroBundleBaseProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger("MYPK");
+    private static final Logger LOGGER = Logger.getLogger(MicroBundleBaseProcessor.class.getName());
+
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
     public static final String OCS_SUCCESS_CODE = "405000000";
 
@@ -281,7 +282,7 @@ public class MicroBundleBaseProcessor {
         }
     }
 
-     public final String generateInternalSessionId() {
+    public final String generateInternalSessionId() {
 
         String serial = RandomStringUtils.random(2, true, false).toUpperCase() + "" + Math.abs(ThreadLocalRandom.current().nextLong(1, 999999999));
 

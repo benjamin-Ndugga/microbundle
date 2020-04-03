@@ -44,6 +44,7 @@ public class MenuHandler {
                     + "PROD_ID_AM "
                     + "FROM "
                     + "MICRO_PRODUCTS");
+                    //+ "MICRO_PRODUCTS_NEW");
 
             ResultSet resultSet = statement.executeQuery();
 
