@@ -284,7 +284,8 @@ public class MicroBundleBaseProcessor {
 
     public final String generateInternalSessionId() {
 
-        String serial = RandomStringUtils.random(2, true, false).toUpperCase() + "" + Math.abs(ThreadLocalRandom.current().nextLong(1, 999999999));
+        //String serial = RandomStringUtils.random(2, true, false).toUpperCase() + "" + Math.abs(ThreadLocalRandom.current().nextLong(1, 999999999));
+        String serial = RandomStringUtils.random(11, true, true).toUpperCase() + "MICRO";
 
         LOGGER.log(Level.INFO, "GENERATE-SERIAL: {0}", serial);
 
