@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.service;
+package org.airtel.ug.mypk.services;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,7 +22,7 @@ import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.util.MicroBundleHzClient;
+import org.airtel.ug.mypk.controllers.CacheController;
 
 /**
  *
@@ -40,7 +40,7 @@ public class MicroBundleServlet extends HttpServlet {
     private String PP_IMSIS;
 
     @Inject
-    private MicroBundleHzClient microBundleHzClient;
+    private CacheController microBundleHzClient;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -74,7 +74,7 @@ public class MicroBundleServlet extends HttpServlet {
                 return;
             }
 
-            //MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
+            //MicroBundleHzClient microBundleHzClient = new CacheController();
             //for first time freeflow control request flash a Menu
             if (TYPE.equals("1")) {
 

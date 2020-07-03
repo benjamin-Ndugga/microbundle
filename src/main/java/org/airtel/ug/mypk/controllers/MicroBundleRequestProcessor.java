@@ -20,7 +20,6 @@ import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.retry.MicroBundleRetryRequest;
 import org.airtel.ug.mypk.retry.MicroBundleRetryRequestFileHandler;
-import org.airtel.ug.mypk.util.MicroBundleHzClient;
 import org.ibm.ws.OCSWebMethods;
 
 /**
@@ -74,7 +73,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
         LOGGER.log(Level.INFO, "SUBSCRIBE-USING-AT | {0}", msisdn);
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient();
+        CacheController hzClient = new CacheController();
         String internalSessionId;
         try {
 
@@ -153,7 +152,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
         LOGGER.log(Level.INFO, "SUBSCRIBE-USING-AM | {0}", msisdn);
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient();
+        CacheController hzClient = new CacheController();
         String internalSessionId = null;
         try {
 
@@ -289,7 +288,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
 
             //get the band for this customer
-            int band_id = new MicroBundleHzClient().getBand(msisdn);
+            int band_id = new CacheController().getBand(msisdn);
 
             requestLog.setBand_id(band_id);
 

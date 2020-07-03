@@ -21,7 +21,7 @@ import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.util.MicroBundleHzClient;
+import org.airtel.ug.mypk.controllers.CacheController;
 
 
 /**
@@ -106,7 +106,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient();
+        CacheController hzClient = new CacheController();
 
         String responseTxt = "";
 
@@ -245,7 +245,7 @@ public class RestfulClient {
 
         InitialContext ic = null;
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient();
+        CacheController hzClient = new CacheController();
 
         String responseTxt = "";
 

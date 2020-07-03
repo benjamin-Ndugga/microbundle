@@ -21,7 +21,7 @@ import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.util.MicroBundleHzClient;
+import org.airtel.ug.mypk.controllers.CacheController;
 
 /**
  * 10-Dec-2018 written in support based on the ARPU for voice subscribers
@@ -63,7 +63,7 @@ public class Client extends HttpServlet {
         String IMSI = request.getParameter("IMSI");
         String INPUT = request.getParameter("INPUT");
 
-        MicroBundleHzClient microBundleHzClient = new MicroBundleHzClient();
+        CacheController microBundleHzClient = new CacheController();
         try {
 
             LOGGER.log(Level.INFO, "SESSIONID >>> {0} | {1}", new Object[]{SESSIONID, MSISDN});

@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.util;
+
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
@@ -23,7 +23,7 @@ public class HZInstanceProducer {
     @PostConstruct
     public void createHazelcastInstance() {
 
-        LOGGER.log(Level.INFO, "INIT-TO-HZ-INSTANCE");
+        LOGGER.log(Level.INFO, "initialise connection to cache server...");
 
         HAZELCAST_INSTANCE = HazelcastClient.newHazelcastClient();
     }
@@ -31,7 +31,7 @@ public class HZInstanceProducer {
     @PreDestroy
     public void close() {
 
-        LOGGER.log(Level.INFO, "SHUT-DOWN-HZ-INSTANCE-FOR-RUNNABLE");
+        LOGGER.log(Level.INFO, "shutdown connection on cache server...");
 
         HAZELCAST_INSTANCE.shutdown();
     }

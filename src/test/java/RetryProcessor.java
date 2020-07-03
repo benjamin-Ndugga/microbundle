@@ -14,7 +14,7 @@ import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_OPERAT
 import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_SUCCESS_CODE;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.util.MicroBundleHzClient;
+import org.airtel.ug.mypk.controllers.CacheController;
 import org.airtel.ug.mypk.retry.MicroBundleRetryRequest;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
@@ -47,7 +47,7 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
     @Override
     public final void run() {
 
-        MicroBundleHzClient hzClient = new MicroBundleHzClient();
+        CacheController hzClient = new CacheController();
 
         String msisdn = retryRequest.getMsisdn();
         String sessionId = retryRequest.getSessionId();
