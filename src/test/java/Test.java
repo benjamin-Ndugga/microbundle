@@ -21,7 +21,7 @@ public class Test {
 
     private static void validateBillingOption(Integer input) throws MyPakalastBundleException {
         if (!input.equals(1) || !input.equals(2)) {
-            throw new MyPakalastBundleException("Invalid billing option selected please choose either 1 or 2.");
+            throw new MyPakalastBundleException("Invalid billing option selected please choose either 1 or 2.",123);
         }
     }
 

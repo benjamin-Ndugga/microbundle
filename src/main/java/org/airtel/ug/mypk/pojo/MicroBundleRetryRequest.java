@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.retry;
+package org.airtel.ug.mypk.pojo;
 
 import java.io.Serializable;
 
@@ -9,8 +9,31 @@ import java.io.Serializable;
  */
 public class MicroBundleRetryRequest implements Serializable {
 
-    private String msisdn, sessionId, sourceIp, externalId, imsi;
-    private int optionId, currentRetryCount = 1;
+    private String msisdn;
+    private String sessionId;
+    private String sourceIp;
+    private String externalId;
+    private String imsi;
+    private int bandId;
+    private int optionId;
+    private int currentRetryCount = 1;
+    private MenuItem menuItem;
+
+    public int getBandId() {
+        return bandId;
+    }
+
+    public void setBandId(int bandId) {
+        this.bandId = bandId;
+    }
+
+    public MenuItem getMenuItem() {
+        return menuItem;
+    }
+
+    public void setMenuItem(MenuItem menuItem) {
+        this.menuItem = menuItem;
+    }
 
     public String getImsi() {
         return imsi;
@@ -73,10 +96,7 @@ public class MicroBundleRetryRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", currentRetryCount=" + currentRetryCount + '}';
+        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", bandId=" + bandId + ", optionId=" + optionId + ", currentRetryCount=" + currentRetryCount + ", menuItem=" + menuItem + '}';
     }
-
-    
-    
 
 }

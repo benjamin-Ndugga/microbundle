@@ -1,4 +1,4 @@
-package org.airtel.ug.mypk.controllers;
+package org.airtel.ug.mypk.processors;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
@@ -24,8 +25,8 @@ import javax.xml.parsers.SAXParserFactory;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.airtel.ug.mypk.exceptions.DebitAccountException;
 import org.airtel.ug.mypk.exceptions.TransactionStatusException;
-import org.airtel.ug.mypk.menu.MenuItem;
-import org.airtel.ug.mypk.pojo.RequestLog;
+import org.airtel.ug.mypk.pojo.MenuItem;
+import org.airtel.ug.mypk.pojo.MicroBundleTransactionLog;
 import org.airtel.ug.mypk.util.HostNameVerifier;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -46,8 +47,16 @@ public class MicroBundleBaseProcessor {
     public static final String OCS_OPERATOR_ID = "MicroBundle";
 
     public String OCS_IP, OCS_PORT;
-    public final RequestLog requestLog = new RequestLog();
+    public final MicroBundleTransactionLog transactionLog = new MicroBundleTransactionLog();
     public int MAX_RETRY_COUNT = 5;
+
+    public static final ArrayList<String> EXLUDED_SERVICE_CLASSES = new ArrayList<String>() {
+        {
+            add("5111116");
+            add("5111115");
+
+        }
+    };
 
     static {
 
@@ -64,10 +73,10 @@ public class MicroBundleBaseProcessor {
             OCS_IP = (String) ctx.lookup("resource/ocs/ip");
             OCS_PORT = (String) ctx.lookup("resource/ocs/port");
 
-            requestLog.setChannel("USSD");
+            transactionLog.setChannel("USSD");
 
             //set the processing node
-            requestLog.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
+            transactionLog.setProcessingNode(java.net.InetAddress.getLocalHost().getHostAddress());
 
             MAX_RETRY_COUNT = (Integer) ctx.lookup("resource/am/retry");
 
@@ -90,7 +99,7 @@ public class MicroBundleBaseProcessor {
 
         try {
 
-            LOGGER.log(Level.INFO, "LOGGING_REQUEST | {0}", requestLog.getMsisdn());
+            LOGGER.log(Level.INFO, "LOGGING_REQUEST | {0}", transactionLog.getMsisdn());
 
             ic = new InitialContext();
 
@@ -117,40 +126,42 @@ public class MicroBundleBaseProcessor {
                     + "EXT_TRANSID,"
                     + "MOBIQUITY_XML_RESP,"
                     + "EXCEPTION_STR,"
-                    + "CHANNEL) "
-                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                    + "CHANNEL,"
+                    + "SERVICE_CLASS) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
-            statement.setString(1, requestLog.getMsisdn());
-            statement.setString(2, requestLog.getImsi());
-            statement.setString(3, requestLog.getSessionid());
-            statement.setInt(4, requestLog.getBand_id());
-            statement.setString(5, requestLog.getOcsResp());
-            statement.setString(6, requestLog.getOcsDesc());
-            statement.setString(7, requestLog.getRequestIp());
-            statement.setString(8, requestLog.getProcessingNode());
-            statement.setInt(9, requestLog.getOptionId());
-            statement.setString(10, requestLog.getRequestSerial());
-            statement.setString(11, requestLog.getOcsProdID());
-            statement.setString(12, requestLog.getAmProdId());
-            statement.setInt(13, requestLog.getPrice());
-            statement.setString(14, requestLog.getMobiquity_code());
-            statement.setString(15, requestLog.getMobiquity_desc());
-            statement.setString(16, requestLog.getMobiquity_transid());
-            statement.setString(17, requestLog.getExt_transid());
-            statement.setString(18, requestLog.getMobiquity_xml_resp());
-            statement.setString(19, requestLog.getException_str());
-            statement.setString(20, requestLog.getChannel());
+            statement.setString(1, transactionLog.getMsisdn());
+            statement.setString(2, transactionLog.getImsi());
+            statement.setString(3, transactionLog.getSessionid());
+            statement.setInt(4, transactionLog.getBand_id());
+            statement.setString(5, transactionLog.getOcsResp());
+            statement.setString(6, transactionLog.getOcsDesc());
+            statement.setString(7, transactionLog.getRequestIp());
+            statement.setString(8, transactionLog.getProcessingNode());
+            statement.setInt(9, transactionLog.getOptionId());
+            statement.setString(10, transactionLog.getRequestSerial());
+            statement.setString(11, transactionLog.getOcsProdID());
+            statement.setString(12, transactionLog.getAmProdId());
+            statement.setInt(13, transactionLog.getPrice());
+            statement.setString(14, transactionLog.getMobiquity_code());
+            statement.setString(15, transactionLog.getMobiquity_desc());
+            statement.setString(16, transactionLog.getMobiquity_transid());
+            statement.setString(17, transactionLog.getExt_transid());
+            statement.setString(18, transactionLog.getMobiquity_xml_resp());
+            statement.setString(19, transactionLog.getException_str());
+            statement.setString(20, transactionLog.getChannel());
+            statement.setString(21, transactionLog.getServiceClass());
 
             int i = statement.executeUpdate();
 
             connection.commit();
 
-            LOGGER.log(Level.INFO, "EXECUTE_UPDATE_RESPONSE {0} | {1}", new Object[]{i, requestLog.getMsisdn()});
+            LOGGER.log(Level.INFO, "EXECUTE_UPDATE_RESPONSE {0} | {1}", new Object[]{i, transactionLog.getMsisdn()});
 
         } catch (NullPointerException | NamingException | SQLException ex) {
 
-            SMSClient.send_sms(requestLog.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
-            LOGGER.log(Level.INFO, null, ex + " | " + requestLog.getMsisdn());
+            SMSClient.send_sms(transactionLog.getMsisdn(), "Your request can not be processed at the moment!,Please try again later");
+            LOGGER.log(Level.INFO, null, ex + " | " + transactionLog.getMsisdn());
 
         } finally {
 
@@ -238,7 +249,7 @@ public class MicroBundleBaseProcessor {
                 xmlresponse.append(inputLine);
             }
 
-            requestLog.setMobiquity_xml_resp(xmlresponse.toString());
+            transactionLog.setMobiquity_xml_resp(xmlresponse.toString());
 
             LOGGER.log(Level.INFO, "AM_RESPONSE: {0} | {1}", new Object[]{xmlresponse.toString(), msisdn});
 
@@ -251,9 +262,9 @@ public class MicroBundleBaseProcessor {
             LOGGER.log(Level.INFO, "TXNSTATUS {0} | {1}", new Object[]{mobiquityReponseHandler.getTxnstatus(), msisdn});
             LOGGER.log(Level.INFO, "MESSAGE  {0} | {1}", new Object[]{mobiquityReponseHandler.getMessage(), msisdn});
 
-            requestLog.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
-            requestLog.setMobiquity_desc(mobiquityReponseHandler.getMessage());
-            requestLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
+            transactionLog.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
+            transactionLog.setMobiquity_desc(mobiquityReponseHandler.getMessage());
+            transactionLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
 
             return mobiquityReponseHandler;
 
@@ -355,9 +366,9 @@ public class MicroBundleBaseProcessor {
             LOGGER.log(Level.INFO, "AM_RESPONSE_MESSAGE: {0}", mobiquityReponseHandler.getMessage() + " | " + msisdn);
             LOGGER.log(Level.INFO, "AM_RESPONSE_TXID: {0}", mobiquityReponseHandler.getTxnid() + " | " + msisdn);
 
-            requestLog.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
-            requestLog.setMobiquity_desc(mobiquityReponseHandler.getMessage());
-            requestLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
+            transactionLog.setMobiquity_code(mobiquityReponseHandler.getTxnstatus());
+            transactionLog.setMobiquity_desc(mobiquityReponseHandler.getMessage());
+            transactionLog.setMobiquity_transid(mobiquityReponseHandler.getTxnid());
 
             return mobiquityReponseHandler;
         } catch (IOException | NamingException | ParserConfigurationException | SAXException ex) {
@@ -381,4 +392,7 @@ public class MicroBundleBaseProcessor {
             }
         }
     }
+    
+    
+    
 }

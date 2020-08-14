@@ -1,21 +1,19 @@
 
 
-import com.hazelcast.core.HazelcastInstance;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
 import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
 import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
-import org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor;
-import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.MOBIQUITY_SUCCESS_CODE;
-import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_OPERATOR_ID;
-import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_SUCCESS_CODE;
-import org.airtel.ug.mypk.menu.MenuHandler;
-import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.controllers.MenuController;
+import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.controllers.CacheController;
-import org.airtel.ug.mypk.retry.MicroBundleRetryRequest;
+import org.airtel.ug.mypk.pojo.MicroBundleRetryRequest;
+import org.airtel.ug.mypk.processors.MicroBundleBaseProcessor;
+import static org.airtel.ug.mypk.processors.MicroBundleBaseProcessor.MOBIQUITY_SUCCESS_CODE;
+import static org.airtel.ug.mypk.processors.MicroBundleBaseProcessor.OCS_OPERATOR_ID;
+import static org.airtel.ug.mypk.processors.MicroBundleBaseProcessor.OCS_SUCCESS_CODE;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
 
@@ -37,7 +35,7 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
 
         this.retryRequest = retryRequest;
 
-        requestLog.setChannel("RETRY");
+        transactionLog.setChannel("RETRY");
     }
 
     /**
@@ -56,29 +54,29 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
         String externaId = retryRequest.getExternalId();
         String imsi = retryRequest.getImsi();
 
-        requestLog.setMsisdn(msisdn);
-        requestLog.setOptionId(optionId);
-        requestLog.setSessionid(sessionId);
-        requestLog.setRequestIp(sourceIp);
-        requestLog.setImsi(imsi);
-        requestLog.setExt_transid(externaId);
+        transactionLog.setMsisdn(msisdn);
+        transactionLog.setOptionId(optionId);
+        transactionLog.setSessionid(sessionId);
+        transactionLog.setRequestIp(sourceIp);
+        transactionLog.setImsi(imsi);
+        transactionLog.setExt_transid(externaId);
 
         try {
 
             LOGGER.log(Level.INFO, "LOOKUP_CUSTOMER_BAND | {0}", msisdn);
 
             //get the band for this customer
-            int band_id = hzClient.getBand(msisdn);
+            int band_id = hzClient.fetchSubscriberBand(msisdn);
 
-            requestLog.setBand_id(band_id);
+            transactionLog.setBand_id(band_id);
 
             LOGGER.log(Level.INFO, "LOOKUP_MENU_ID_VALUE {0} | {1}", new Object[]{optionId, msisdn});
 
-            MenuItem menuItem = new MenuHandler().getMenuItem(band_id, optionId);
+            MenuItem menuItem = new MenuController().getMenuItem(band_id, optionId);
 
-            requestLog.setOcsProdID(menuItem.getOcsProdId());
-            requestLog.setAmProdId(menuItem.getAmProdId());
-            requestLog.setPrice(menuItem.getPrice());
+            transactionLog.setOcsProdID(menuItem.getOcsProdId());
+            transactionLog.setAmProdId(menuItem.getAmProdId());
+            transactionLog.setPrice(menuItem.getPrice());
 
             //check from AM if this external is present
             MobiquityReponseHandler mobiquityReponseHandler = inquireTransactionStatusOfExtId(externaId, msisdn);
@@ -102,9 +100,9 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
                 LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
                 LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
 
-                requestLog.setOcsResp(resultHeader.getResultCode());
-                requestLog.setOcsDesc(resultHeader.getResultDesc());
-                requestLog.setRequestSerial(ocs.getSerialNo());
+                transactionLog.setOcsResp(resultHeader.getResultCode());
+                transactionLog.setOcsDesc(resultHeader.getResultDesc());
+                transactionLog.setRequestSerial(ocs.getSerialNo());
 
                 //send subscription failure message
                 if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
@@ -128,7 +126,7 @@ public class RetryProcessor extends MicroBundleBaseProcessor implements Runnable
              */
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage() + " | " + msisdn, ex);
 
-            requestLog.setException_str(ex.getLocalizedMessage());
+            transactionLog.setException_str(ex.getLocalizedMessage());
 
             /**
              * if the current retry count is higher than 0

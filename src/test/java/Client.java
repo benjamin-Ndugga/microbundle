@@ -12,16 +12,15 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
-import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
-import org.airtel.ug.mypk.menu.MenuHandler;
-import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.controllers.MenuController;
+import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.controllers.CacheController;
+import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
 
 /**
  * 10-Dec-2018 written in support based on the ARPU for voice subscribers
@@ -102,11 +101,11 @@ public class Client extends HttpServlet {
                 LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", MSISDN);
 
                 //get the band for this customer
-                int band_id = microBundleHzClient.getBand(MSISDN);
+                int band_id = microBundleHzClient.fetchSubscriberBand(MSISDN);
 
                 LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, MSISDN});
 
-                menu = new MenuHandler().getMenuForDisplay(band_id);
+                menu = new MenuController().getMenuForDisplay(band_id);
 
                 LOGGER.log(Level.INFO, "BUILDING_MENU | {0}", MSISDN);
 
@@ -200,7 +199,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
+                   // mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -210,7 +209,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
+                   // mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
         } catch (NumberFormatException ex) {
@@ -254,7 +253,7 @@ public class Client extends HttpServlet {
 
         if (input < 1 || input > 3) {
             LOGGER.log(Level.INFO, "INVALID-CHOICE-SELECTED >> {0}", input);
-            throw new MyPakalastBundleException("Invalid choice please choose between options 1-3.");
+            throw new MyPakalastBundleException("Invalid choice please choose between options 1-3.",123);
         }
     }
 

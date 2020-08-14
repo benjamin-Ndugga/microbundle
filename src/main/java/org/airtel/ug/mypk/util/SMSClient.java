@@ -13,7 +13,7 @@ import javax.naming.NamingException;
 
 /**
  *
- * @author benjamin
+ * @author Benjamin E Ndugga
  */
 public class SMSClient implements Serializable {
 
@@ -27,6 +27,9 @@ public class SMSClient implements Serializable {
      * @param message the message content
      */
     public static void send_sms(String reciever, String message) {
+
+        LOGGER.log(Level.INFO, "SENDING-CONTENT: {0} | {1}", new Object[]{message, reciever});
+
         BufferedReader in = null;
         try {
             InitialContext ic = new InitialContext();
@@ -49,7 +52,7 @@ public class SMSClient implements Serializable {
             }
             in.close();
 
-            LOGGER.log(Level.INFO, "SENDING SMS RESULT MSG {0} | {1}", new Object[]{result, reciever});
+            LOGGER.log(Level.INFO, "SENDING-SMS-RESULT-MSG {0} | {1}", new Object[]{result, reciever});
 
         } catch (NamingException | IOException ex) {
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);

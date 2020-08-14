@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import javax.enterprise.context.ApplicationScoped;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import org.airtel.ug.mypk.pojo.MicroBundleRetryRequest;
 
 /**
  *
@@ -53,7 +54,7 @@ public class MicroBundleRetryRequestFileHandler {
      */
     public void deletRetryFile(String fileName) {
 
-        LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName+FILE_EXTENSION);
+        LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName + FILE_EXTENSION);
 
         boolean b = new File(RETRY_FILE_PATH + fileName + FILE_EXTENSION).delete();
 

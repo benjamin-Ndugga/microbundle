@@ -12,7 +12,7 @@ import org.airtel.ug.mypk.controllers.CacheController;
  * @author Benjamin E Ndugga
  */
 @Path("/cache")
-public class MyPaklastConfiguration {
+public class MyPaklastConfigurationService {
 
     @Inject
     private CacheController cacheController;
@@ -48,7 +48,7 @@ public class MyPaklastConfiguration {
     @Path("/fetch/{msisdn}")
     public String fetchCurrentBand(@PathParam("msisdn") String msisdn) {
 
-        return "Current Band: " + cacheController.getBand(msisdn);
+        return "Current Band: " + cacheController.fetchSubscriberBand(msisdn);
 
     }
 }

@@ -3,15 +3,24 @@ package org.airtel.ug.mypk.controllers;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.huawei.www.bme.cbsinterface.cbs.businessmgr.IntegrationEnquiryResult;
+import com.huawei.www.bme.cbsinterface.cbs.businessmgr.IntegrationEnquiryResultSubscriberInfo;
+import com.huawei.www.bme.cbsinterface.cbs.businessmgrmsg.IntegrationEnquiryResultMsg;
+import com.huawei.www.bme.cbsinterface.common.ResultHeader;
+import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.enterprise.context.ApplicationScoped;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.xml.rpc.ServiceException;
+import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
+import org.ibm.ws.OCSWebMethods;
 
 /**
  *
@@ -26,8 +35,18 @@ public class CacheController {
     private static final String MICRO_BUNDLE_MAP_NAME = "pnp.mypakalast";
     private static final String OPTION_ID_MAP_NAME = "mypk.optionid";
     private static final String BILLING_OPTION_MAP_NAME = "mypk.billingoption";
+    private static final String SERVICE_CLASS_MAP_NAME = "pnp.serviceclass";
 
     private static HazelcastInstance HAZELCAST_INSTANCE;
+
+    @Resource(lookup = "concurrent/mypakalast")
+    private ManagedExecutorService mes;
+
+    @Resource(lookup = "resource/ocs/ip")
+    private String OCS_IP;
+
+    @Resource(lookup = "resource/ocs/port")
+    private String OCS_PORT;
 
     @PostConstruct
     public void createHazelcastInstance() {
@@ -43,6 +62,73 @@ public class CacheController {
         LOGGER.log(Level.INFO, "shutdown connection on cache server...");
 
         HAZELCAST_INSTANCE.shutdown();
+    }
+
+    /**
+     *
+     * @param msisdn
+     * @return
+     * @throws MyPakalastBundleException
+     */
+    public String fetchServiceClass(String msisdn) throws MyPakalastBundleException {
+        try {
+            LOGGER.log(Level.INFO, "FETCH-CACHED-SERVICECLASS |{0}", msisdn);
+
+            //get the option id
+            IMap<String, String> map = HAZELCAST_INSTANCE.getMap(SERVICE_CLASS_MAP_NAME);
+
+            String serviceClass = map.get(msisdn);
+
+            LOGGER.log(Level.INFO, "CACHED-SERVICECLASS: {0} | {1}", new Object[]{serviceClass, msisdn});
+
+            if (serviceClass == null) {
+
+                LOGGER.log(Level.INFO, "LOADED-OCS_IP {0}", OCS_IP);
+                LOGGER.log(Level.INFO, "LOADED-OCS_PORT {0}", OCS_PORT);
+
+                OCSWebMethods ocsWebMethods = new OCSWebMethods(OCS_IP, OCS_PORT);
+
+                LOGGER.log(Level.INFO, "QUERY-SERVICECLASS | {0}", msisdn);
+
+                IntegrationEnquiryResultMsg integrationEnquiry = ocsWebMethods.integrationEnquiry(msisdn.substring(3), "0", "DSE");
+                IntegrationEnquiryResult integrationEnquiryResult = integrationEnquiry.getIntegrationEnquiryResult();
+
+                ResultHeader resultHeader = integrationEnquiry.getResultHeader();
+
+                LOGGER.log(Level.INFO, "RESULT-CODE: {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
+                LOGGER.log(Level.INFO, "RESULT-DESC: {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
+
+                if (integrationEnquiryResult != null) {
+
+                    LOGGER.log(Level.INFO, "RESULT-OBJECT | {0}", integrationEnquiryResult);
+
+                    IntegrationEnquiryResultSubscriberInfo subscriberInfo = integrationEnquiryResult.getSubscriberInfo();
+                    String mainProductId = subscriberInfo.getSubscriber().getMainProductID();
+
+                    LOGGER.log(Level.INFO, "OCS-SERVICECLASS: {0} | {1}", new Object[]{serviceClass, msisdn});
+
+                    //cache this service class
+                    mes.execute(() -> {
+                        map.put(msisdn, mainProductId);
+                    });
+                    //we can not access the service class in a separate thread 
+                    //as it's not declared as final we will need to use another variable
+                    serviceClass = (mainProductId);
+                } else {
+
+                    LOGGER.log(Level.INFO, "FAILED-TO-QUERY-SERVICECLASS | {0}", msisdn);
+
+                }
+            }
+
+            return serviceClass;
+
+        } catch (RemoteException | ServiceException ex) {
+
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+
+            throw new MyPakalastBundleException("Failed to query subscriber service class.", 700);
+        }
     }
 
     public void flushCache() {
@@ -117,7 +203,7 @@ public class CacheController {
      * @param msisdn the requesting subscriber
      * @return
      */
-    public Integer getBand(String msisdn) {
+    public Integer fetchSubscriberBand(String msisdn) {
 
         //HazelcastInstance client = null;
         try {
@@ -129,14 +215,15 @@ public class CacheController {
 
             Integer band_found = map.get(msisdn);
 
-            LOGGER.log(Level.INFO, "BAND-FOUND FROM HZ-INSTANCE {0} | {1}", new Object[]{band_found, msisdn});
-
             if (band_found == null) {
 
-                LOGGER.log(Level.INFO, "DEFAULT_TO BAND " + DEFAULT_BAND + "| {0}", msisdn);
+                LOGGER.log(Level.INFO, "DEFAULT-TO-BAND " + DEFAULT_BAND + "| {0}", msisdn);
 
                 return DEFAULT_BAND;
             } else {
+
+                LOGGER.log(Level.INFO, "FOUND-BAND {0} | {1}", new Object[]{band_found, msisdn});
+
                 return band_found;
             }
 

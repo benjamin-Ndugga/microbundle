@@ -6,18 +6,26 @@ import java.io.Serializable;
  *
  * @author benjamin
  */
-public class RequestLog implements Serializable {
+public class MicroBundleTransactionLog implements Serializable {
 
     private static final long serialVersionUID = 20181210L;
 
-    private int id, optionId, band_id, price;
-    private String msisdn, channel;
+    private int id;
+    private int optionId;
+    private int band_id;
+    private int price;
+
+    private String msisdn;
+    private String channel;
     private String imsi;
     private String sessionid;
-    private String ocsResp, ocsDesc, requestSerial;
+    private String ocsResp;
+    private String ocsDesc;
+    private String requestSerial;
     private String requestIp;
     private String processingNode;
-    private String ocsProdID, amProdId;
+    private String ocsProdID;
+    private String amProdId;
 
     private String mobiquity_xml_resp;
     private String mobiquity_transid;
@@ -25,6 +33,16 @@ public class RequestLog implements Serializable {
     private String mobiquity_code;
     private String ext_transid;
     private String exception_str;
+
+    private String serviceClass;
+
+    public String getServiceClass() {
+        return serviceClass;
+    }
+
+    public void setServiceClass(String serviceClass) {
+        this.serviceClass = serviceClass;
+    }
 
     public String getException_str() {
         return exception_str;
@@ -192,6 +210,11 @@ public class RequestLog implements Serializable {
 
     public void setMobiquity_transid(String mobiquity_transid) {
         this.mobiquity_transid = mobiquity_transid;
+    }
+
+    @Override
+    public String toString() {
+        return "MicroBundleTransactionLog{" + "id=" + id + ", optionId=" + optionId + ", band_id=" + band_id + ", price=" + price + ", msisdn=" + msisdn + ", channel=" + channel + ", imsi=" + imsi + ", sessionid=" + sessionid + ", ocsResp=" + ocsResp + ", ocsDesc=" + ocsDesc + ", requestSerial=" + requestSerial + ", requestIp=" + requestIp + ", processingNode=" + processingNode + ", ocsProdID=" + ocsProdID + ", amProdId=" + amProdId + ", mobiquity_xml_resp=" + mobiquity_xml_resp + ", mobiquity_transid=" + mobiquity_transid + ", mobiquity_desc=" + mobiquity_desc + ", mobiquity_code=" + mobiquity_code + ", ext_transid=" + ext_transid + ", exception_str=" + exception_str + ", serviceClass=" + serviceClass + '}';
     }
 
 }//end of class

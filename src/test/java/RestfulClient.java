@@ -1,5 +1,4 @@
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,12 +16,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import org.airtel.ug.mypk.controllers.MicroBundleRequestProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
-import org.airtel.ug.mypk.menu.MenuHandler;
-import org.airtel.ug.mypk.menu.MenuItem;
+import org.airtel.ug.mypk.controllers.MenuController;
+import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.controllers.CacheController;
-
+import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
 
 /**
  *
@@ -146,11 +144,11 @@ public class RestfulClient {
                 LOGGER.log(Level.INFO, "LOOKUP_CUSTOMER BAND | {0}", MSISDN);
 
                 //get the band for this customer
-                int band_id = hzClient.getBand(MSISDN);
+                int band_id = hzClient.fetchSubscriberBand(MSISDN);
 
                 LOGGER.log(Level.INFO, "BAND_ID FOUND {0} | {1}", new Object[]{band_id, MSISDN});
 
-                menu = new MenuHandler().getMenuForDisplay(band_id);
+                menu = new MenuController().getMenuForDisplay(band_id);
 
                 LOGGER.log(Level.INFO, "BUILDING_MENU | {0}", MSISDN);
 
@@ -197,8 +195,7 @@ public class RestfulClient {
 
                 responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
-
+                // new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
                 return responseTxt;
 
             }
@@ -285,11 +282,11 @@ public class RestfulClient {
                 LOGGER.log(Level.INFO, "LOOKUP_CUSTOMER BAND | {0}", MSISDN);
 
                 //get the band for this customer
-                int band_id = hzClient.getBand(MSISDN);
+                int band_id = hzClient.fetchSubscriberBand(MSISDN);
 
                 LOGGER.log(Level.INFO, "BAND_ID FOUND {0} | {1}", new Object[]{band_id, MSISDN});
 
-                menu = new MenuHandler().getMenuForDisplay(band_id);
+                menu = new MenuController().getMenuForDisplay(band_id);
 
                 LOGGER.log(Level.INFO, "BUILDING_MENU | {0}", MSISDN);
 
@@ -378,8 +375,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
-
+                    //new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
                     return responseTxt;
 
                 } else {
@@ -390,8 +386,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
-
+                    //new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
                     return responseTxt;
                 }
 

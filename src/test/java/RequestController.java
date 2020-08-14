@@ -1,4 +1,3 @@
-package org.airtel.ug.mypk.services;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -10,28 +9,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.controllers.CacheController;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.controllers.MenuController;
 import org.airtel.ug.mypk.pojo.MenuItem;
-import org.airtel.ug.mypk.controllers.CacheController;
 import org.airtel.ug.mypk.pojo.MicroBundleRequest;
+import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
 import org.airtel.ug.mypk.util.SMSClient;
 
 /**
  *
  * @author Benjamin E Ndugga
  */
-@WebServlet(name = "MicroBundleServlet", urlPatterns = {"/Client"})
-public class MicroBundleServlet extends HttpServlet {
+@ApplicationScoped
+public class RequestController {
 
-    private static final Logger LOGGER = Logger.getLogger(MicroBundleServlet.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RequestController.class.getName());
 
     @Resource(lookup = "concurrent/mypakalast")
     private ManagedExecutorService mes;
@@ -42,22 +40,15 @@ public class MicroBundleServlet extends HttpServlet {
     @Inject
     private CacheController cacheController;
 
-    @Inject
-    private MenuController menuController;
-
     @Resource(lookup = "resource/am/enabled")
     private int amBillingOption;
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response, String msisdn, String sessionid, String imsi, String input, String type) throws IOException {
         response.setContentType("text/html;charset=UTF-8");
-
-        String msisdn = request.getParameter("MSISDN");
-        String sessionid = request.getParameter("SESSIONID");
-        String type = request.getParameter("TYPE");
-        String imsi = request.getParameter("IMSI");
-        String input = request.getParameter("INPUT");
-        PrintWriter out = response.getWriter();
+        PrintWriter out = null;
         try {
+
+            out = response.getWriter();
 
             LOGGER.log(Level.INFO, "SESSIONID >>> {0} | {1}", new Object[]{sessionid, msisdn});
             LOGGER.log(Level.INFO, "INPUT >>> {0} | {1}", new Object[]{input.replaceAll("\\S", "*"), msisdn});
@@ -93,7 +84,7 @@ public class MicroBundleServlet extends HttpServlet {
 
                 LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, msisdn});
 
-                ArrayList<MenuItem> menu = menuController.getMenuForDisplay(band_id);
+                ArrayList<MenuItem> menu = new MenuController().getMenuForDisplay(band_id);
 
                 LOGGER.log(Level.INFO, "DISPLAY-MENU | {0}", msisdn);
 
@@ -109,14 +100,6 @@ public class MicroBundleServlet extends HttpServlet {
                 }
 
             } else {
-
-                //get the source of this request
-                String src = request.getHeader("X-Real-IP");
-
-                if (src == null) {
-                    src = request.getRemoteAddr();
-                }
-
                 Integer optionId;
 
                 LOGGER.log(Level.INFO, "IS-AM-OPTION-ENABLED >>> {0} | {1}", new Object[]{amBillingOption, msisdn});
@@ -132,39 +115,42 @@ public class MicroBundleServlet extends HttpServlet {
 
                     final int optionId_final = (optionId);
 
-                    MicroBundleRequest microBundleRequest = new MicroBundleRequest();
-                    microBundleRequest.setMsisdn(msisdn);
-                    microBundleRequest.setSourceIp(src);
-
                     mes.execute(() -> {
                         try {
-
-                            microBundleRequest.setServiceClass(cacheController.fetchServiceClass(msisdn));
+                            MicroBundleRequest microBundleRequest = new MicroBundleRequest();
 
                             //fetch the band_id
-                            int band_id = cacheController.fetchSubscriberBand(request.getParameter("MSISDN"));
+                            int band_id = cacheController.fetchSubscriberBand(msisdn);
 
-                            LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, request.getParameter("MSISDN")});
+                            LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, msisdn});
 
                             microBundleRequest.setBandId(band_id);
 
-                            MenuItem menuItem = menuController.getMenuItem(band_id, optionId_final);
-
-                            LOGGER.log(Level.INFO, "SELECTED-MENU-ITEM {0} | {1}", new Object[]{menuItem, request.getParameter("MSISDN")});
+                            MenuItem menuItem = new MenuController().getMenuItem(band_id, optionId_final);
 
                             microBundleRequest.setOptionId(optionId_final);
                             microBundleRequest.setImsi(imsi);
                             microBundleRequest.setPin(null);
                             microBundleRequest.setSessionId(sessionid);
 
-                            LOGGER.log(Level.INFO, "EXECUTE-REQUEST: {0}", microBundleRequest);
+                            //get the source of this request
+                            String src = request.getHeader("X-Real-IP");
+
+                            if (src == null) {
+                                src = request.getRemoteAddr();
+                            }
+
+                            microBundleRequest.setSourceIp(src);
+
+                            microBundleRequest.setServiceClass(cacheController.fetchServiceClass(msisdn));
+
+                            LOGGER.log(Level.INFO, "excecute: {0}", microBundleRequest);
 
                             MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
                             microBundleRequestProcessor.run();
 
-                        } catch (Exception ex) {
-
-                            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+                        } catch (MyPakalastBundleException ex) {
+                            LOGGER.log(Level.INFO, ex.getLocalizedMessage());
                             SMSClient.send_sms(msisdn, ex.getLocalizedMessage());
                         }
                     });
@@ -218,107 +204,115 @@ public class MicroBundleServlet extends HttpServlet {
                         return;
                     } else {
                         LOGGER.log(Level.INFO, "SETTING-DEFAULT-TO-AT-BILLING-OPTION | {0}", msisdn);
-
+                        LOGGER.log(Level.INFO, "BILLING-OPTION: {0} | {1}", new Object[]{billingOption, msisdn});
                         //set the billingoption to deafault 2
                         billingOption = 2;
-
-                        LOGGER.log(Level.INFO, "BILLING-OPTION: {0} | {1}", new Object[]{billingOption, msisdn});
                     }
                 }
 
                 if (billingOption == 2) {
-
                     //proceed to process Airtime Request
+
                     response.setHeader("Cont", "FB");
-                    out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                    MicroBundleRequest microBundleRequest = new MicroBundleRequest();
-                    microBundleRequest.setMsisdn(msisdn);
-                    microBundleRequest.setImsi(imsi);
-                    microBundleRequest.setPin(null);
-                    microBundleRequest.setSessionId(sessionid);
-                    microBundleRequest.setOptionId(optionId);
-                    microBundleRequest.setSourceIp(src);
-
-                    LOGGER.log(Level.INFO, "SUBMIT-REQUEST-TO-QUEUE | {0}", microBundleRequest);
-
-                    mes.execute(() -> {
-                        try {
-
-                            LOGGER.log(Level.INFO, "BUILDING-REQUEST | {0}", microBundleRequest);
-
-                            //fetch the subscriber's service class
-                            microBundleRequest.setServiceClass(cacheController.fetchServiceClass(msisdn));
-
-                            //fetch the subscriber's band
-                            Integer bandId = cacheController.fetchSubscriberBand(msisdn);
-
-                            microBundleRequest.setBandId(bandId);
-
-                            MenuItem menuItem = menuController.getMenuItem(bandId, optionId);
-
-                            LOGGER.log(Level.INFO, "SELECTED-MENU-ITEM: {0} | {1}", new Object[]{menuItem, msisdn});
-
-                            LOGGER.log(Level.INFO, "RUNNING-REQUEST: {0}", microBundleRequest);
-
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
-
-                            LOGGER.log(Level.INFO, "PROCESSING >>> {0}", microBundleRequestProcessor);
-
-                            microBundleRequestProcessor.run();
-
-                        } catch (Exception ex) {
-                            ex.printStackTrace(System.err);
-                        }
-
-                    });
-
-                } else {
-                    //proceed to process Airtel Money Request
-                    LOGGER.log(Level.INFO, "AIRTEL-MONEY-REQUEST | {0}", msisdn);
-                    
-                    response.setHeader("Cont", "FB");
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
                     LOGGER.log(Level.INFO, "SUBMIT-TASK-TO-QUEUE | {0}", msisdn);
 
-                    MicroBundleRequest microBundleRequest = new MicroBundleRequest();
-                    microBundleRequest.setMsisdn(msisdn);
-                    microBundleRequest.setImsi(imsi);
-                    microBundleRequest.setPin(input);
-                    microBundleRequest.setSessionId(sessionid);
-                    microBundleRequest.setOptionId(optionId);
-                    microBundleRequest.setSourceIp(src);
+                    final int optionId_final = (optionId);
 
                     mes.execute(() -> {
                         try {
+                            MicroBundleRequest microBundleRequest = new MicroBundleRequest();
 
-                            LOGGER.log(Level.INFO, "BUILDING-REQUEST | {0}", microBundleRequest);
+                            //fetch the band_id
+                            int band_id = cacheController.fetchSubscriberBand(msisdn);
 
-                            //fetch the subscriber's service class
+                            LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, msisdn});
+
+                            microBundleRequest.setBandId(band_id);
+
+                            MenuItem menuItem = new MenuController().getMenuItem(band_id, optionId_final);
+
+                            microBundleRequest.setOptionId(optionId_final);
+                            microBundleRequest.setImsi(imsi);
+                            microBundleRequest.setPin(null);
+                            microBundleRequest.setSessionId(sessionid);
+
+                            //get the source of this request
+                            String src = request.getHeader("X-Real-IP");
+
+                            if (src == null) {
+                                src = request.getRemoteAddr();
+                            }
+
+                            microBundleRequest.setSourceIp(src);
+
                             microBundleRequest.setServiceClass(cacheController.fetchServiceClass(msisdn));
 
-                            //fetch the subscriber's band
-                            Integer bandId = cacheController.fetchSubscriberBand(msisdn);
-
-                            microBundleRequest.setBandId(bandId);
-
-                            MenuItem menuItem = menuController.getMenuItem(bandId, optionId);
-
-                            LOGGER.log(Level.INFO, "SELECTED-MENU-ITEM: {0} | {1}", new Object[]{menuItem, msisdn});
-
-                            LOGGER.log(Level.INFO, "RUNNING-REQUEST: {0}", microBundleRequest);
+                            LOGGER.log(Level.INFO, "excecute: {0}", microBundleRequest);
 
                             MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
-
-                            LOGGER.log(Level.INFO, "PROCESSING >>> {0}", microBundleRequestProcessor);
-
                             microBundleRequestProcessor.run();
 
-                        } catch (Exception ex) {
-                            ex.printStackTrace(System.err);
+                        } catch (MyPakalastBundleException ex) {
+                            LOGGER.log(Level.INFO, ex.getLocalizedMessage());
+                            SMSClient.send_sms(msisdn, ex.getLocalizedMessage());
                         }
                     });
+
+                } else {
+                    //proceed to process Airtel Money Request
+                    response.setHeader("Cont", "FB");
+
+                    LOGGER.log(Level.INFO, "Request-Thread-dispatched-AirtelMoney | {0}", msisdn);
+
+                    out.println("Your request is being processed. Please wait for a confirmation SMS.");
+
+                    LOGGER.log(Level.INFO, "SUBMIT-TASK-TO-QUEUE | {0}", msisdn);
+
+                    final int optionId_final = (optionId);
+
+                    mes.execute(() -> {
+                        try {
+                            MicroBundleRequest microBundleRequest = new MicroBundleRequest();
+
+                            //fetch the band_id
+                            int band_id = cacheController.fetchSubscriberBand(msisdn);
+
+                            LOGGER.log(Level.INFO, "BAND-ID-FOUND: {0} | {1}", new Object[]{band_id, msisdn});
+
+                            microBundleRequest.setBandId(band_id);
+
+                            MenuItem menuItem = new MenuController().getMenuItem(band_id, optionId_final);
+
+                            microBundleRequest.setOptionId(optionId_final);
+                            microBundleRequest.setImsi(imsi);
+                            microBundleRequest.setPin(input);
+                            microBundleRequest.setSessionId(sessionid);
+
+                            //get the source of this request
+                            String src = request.getHeader("X-Real-IP");
+
+                            if (src == null) {
+                                src = request.getRemoteAddr();
+                            }
+
+                            microBundleRequest.setSourceIp(src);
+
+                            microBundleRequest.setServiceClass(cacheController.fetchServiceClass(msisdn));
+
+                            LOGGER.log(Level.INFO, "EXECUTE: {0}", microBundleRequest);
+
+                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            microBundleRequestProcessor.run();
+
+                        } catch (MyPakalastBundleException ex) {
+                            LOGGER.log(Level.INFO, ex.getLocalizedMessage());
+                            SMSClient.send_sms(msisdn, ex.getLocalizedMessage());
+                        }
+                    });
+
                 }
             }
 
@@ -336,65 +330,10 @@ public class MicroBundleServlet extends HttpServlet {
             response.setHeader("Cont", "FB");
             out.println("Your request failed to be processed, please try again later.");
 
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
-
-            response.setHeader("Cont", "FB");
-            out.println("Your request failed to be processed, please try again later.");
-
         } finally {
             out.close();
         }
     }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     *
-     * @param request
-     * @param response
-     * @throws ServletException
-     * @throws IOException
-     */
-    @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
 
     public void validateBundleSelected(int input) throws MyPakalastBundleException {
 

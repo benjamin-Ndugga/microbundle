@@ -1,5 +1,6 @@
-package org.airtel.ug.mypk.menu;
+package org.airtel.ug.mypk.controllers;
 
+import org.airtel.ug.mypk.pojo.MenuItem;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,8 +9,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.ejb.Startup;
+import javax.enterprise.context.ApplicationScoped;
 import javax.sql.DataSource;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 
@@ -17,13 +20,19 @@ import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
  *
  * @author Benjamin E Ndugga
  */
-public class MenuHandler {
+@Startup
+@ApplicationScoped
+public class MenuController {
 
-    private static final Logger LOGGER = Logger.getLogger(MenuHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MenuController.class.getName());
 
     private static final ArrayList<MenuItem> MENU_LIST = new ArrayList<>();
 
-    static {
+    @Resource(lookup = "KIKADB")
+    DataSource dataSource;
+
+    @PostConstruct
+    public void buildMyPakalastMenu() {
 
         Connection connection = null;
         PreparedStatement statement;
@@ -31,7 +40,7 @@ public class MenuHandler {
 
             LOGGER.log(Level.INFO, "LOADING_MENU");
 
-            DataSource dataSource = (DataSource) new InitialContext().lookup("KIKADB");
+            //DataSource dataSource = (DataSource) new InitialContext().lookup("KIKADB");
             connection = dataSource.getConnection();
 
             statement = connection.prepareStatement("SELECT "
@@ -44,7 +53,7 @@ public class MenuHandler {
                     + "PROD_ID_AM "
                     + "FROM "
                     + "MICRO_PRODUCTS");
-                    //+ "MICRO_PRODUCTS_NEW");
+            //+ "MICRO_PRODUCTS_NEW");
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -65,7 +74,7 @@ public class MenuHandler {
                 LOGGER.log(Level.INFO, "LOADED-MENU {0}", menuItem.printLogFormat());
             }
 
-        } catch (NamingException | SQLException ex) {
+        } catch (SQLException ex) {
             LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
         } finally {
             if (connection != null) {
@@ -85,7 +94,7 @@ public class MenuHandler {
      * @param bandId the band for which whose menu will be generated
      *
      * @return the ArrayLis of the Menu to be displayed
-     * @throws org.airtel.ug.mypk.util.MyPakalastBundleException
+     * @throws org.airtel.ug.mypk.exceptions.MyPakalastBundleException
      */
     public ArrayList<MenuItem> getMenuForDisplay(int bandId) throws MyPakalastBundleException {
         ArrayList<MenuItem> menu_to_display = new ArrayList<>();
@@ -98,7 +107,7 @@ public class MenuHandler {
 
         if (menu_to_display.isEmpty()) {
             //throw new MyPakalastBundleException("Failed to process request can not categorise Your Number");
-            throw new MyPakalastBundleException("You are ineligible for this service.Dial *149# to select another bundle of your choice.");
+            throw new MyPakalastBundleException("You are ineligible for this service.Dial *149# to select another bundle of your choice.", 234);
         }
 
         //sort the menu from small to big according to the option_id
@@ -113,7 +122,7 @@ public class MenuHandler {
      * @param bandId
      * @param option_id
      * @return
-     * @throws org.airtel.ug.mypk.util.MyPakalastBundleException
+     * @throws org.airtel.ug.mypk.exceptions.MyPakalastBundleException
      */
     public MenuItem getMenuItem(int bandId, int option_id) throws MyPakalastBundleException {
 
@@ -127,7 +136,7 @@ public class MenuHandler {
                     });
 
             if (band_menu.isEmpty()) {
-                throw new MyPakalastBundleException("Failed to process request can not categorise Your Number");
+                throw new MyPakalastBundleException("Failed to process request can not categorise Your Number", 235);
             }
 
             //sorts based on the comparable implementation
@@ -137,7 +146,7 @@ public class MenuHandler {
             //the position is pos -1 to get the menuItem being requested for
             return band_menu.get(option_id - 1);
         } catch (IndexOutOfBoundsException ex) {
-            throw new MyPakalastBundleException("Invalid Choice, Please try again!");
+            throw new MyPakalastBundleException("Invalid Choice, Please try again!", 236);
         }
     }
 

@@ -1,10 +1,12 @@
-package org.airtel.ug.mypk.menu;
+package org.airtel.ug.mypk.pojo;
+
+import java.io.Serializable;
 
 /**
  *
  * @author Benjamin E Ndugga
  */
-public class MenuItem implements Comparable<MenuItem> {
+public class MenuItem implements Comparable<MenuItem>, Serializable {
 
     private int id;
     private int bandId;
@@ -22,10 +24,6 @@ public class MenuItem implements Comparable<MenuItem> {
 //    public void setDataProdId(String dataProdId) {
 //        this.dataProdId = dataProdId;
 //    }
-
-    
-    
-    
     public String getOcsProdId() {
         return ocsProdId;
     }
@@ -33,8 +31,6 @@ public class MenuItem implements Comparable<MenuItem> {
     public void setOcsProdId(String ocsProdId) {
         this.ocsProdId = ocsProdId;
     }
-
-    
 
     public String getAmProdId() {
         return amProdId;
@@ -92,12 +88,9 @@ public class MenuItem implements Comparable<MenuItem> {
         return this.optionId + "." + this.menuItemName;
     }
 
-    
     public String printLogFormat() {
         return "MenuItem{" + "id=" + id + ", bandId=" + bandId + ", optionId=" + optionId + ", price=" + price + ", ocsProdId=" + ocsProdId + ", amProdId=" + amProdId + ", menuItemName=" + menuItemName + '}';
     }
-    
-    
 
     @Override
     public int compareTo(MenuItem m) {
@@ -106,14 +99,11 @@ public class MenuItem implements Comparable<MenuItem> {
         //+1 greater than
         if (m.getOptionId() > getOptionId()) {
             return 1;
-        } else if (m.getOptionId() ==getOptionId()) {
+        } else if (m.getOptionId() == getOptionId()) {
             return 0;
         } else {
             return -1;
         }
     }
 
-    
-    
-    
 }
