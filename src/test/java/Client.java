@@ -20,7 +20,7 @@ import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.controllers.MenuController;
 import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.controllers.CacheController;
-import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.processors.RequestProcessor;
 
 /**
  * 10-Dec-2018 written in support based on the ARPU for voice subscribers
@@ -199,7 +199,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                   // mes.submit(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
+                   // mes.submit(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, null));
 
                 } else {
                     //proceed to process Airtel Money Request
@@ -209,7 +209,7 @@ public class Client extends HttpServlet {
 
                     out.println("Your request is being processed. Please wait for a confirmation SMS.");
 
-                   // mes.execute(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
+                   // mes.execute(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT));
                 }
             }
         } catch (NumberFormatException ex) {

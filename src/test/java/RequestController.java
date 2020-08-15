@@ -19,7 +19,7 @@ import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.controllers.MenuController;
 import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.pojo.MicroBundleRequest;
-import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.processors.RequestProcessor;
 import org.airtel.ug.mypk.util.SMSClient;
 
 /**
@@ -146,7 +146,7 @@ public class RequestController {
 
                             LOGGER.log(Level.INFO, "excecute: {0}", microBundleRequest);
 
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            RequestProcessor microBundleRequestProcessor = new RequestProcessor(microBundleRequest, menuItem);
                             microBundleRequestProcessor.run();
 
                         } catch (MyPakalastBundleException ex) {
@@ -252,7 +252,7 @@ public class RequestController {
 
                             LOGGER.log(Level.INFO, "excecute: {0}", microBundleRequest);
 
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            RequestProcessor microBundleRequestProcessor = new RequestProcessor(microBundleRequest, menuItem);
                             microBundleRequestProcessor.run();
 
                         } catch (MyPakalastBundleException ex) {
@@ -304,7 +304,7 @@ public class RequestController {
 
                             LOGGER.log(Level.INFO, "EXECUTE: {0}", microBundleRequest);
 
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            RequestProcessor microBundleRequestProcessor = new RequestProcessor(microBundleRequest, menuItem);
                             microBundleRequestProcessor.run();
 
                         } catch (MyPakalastBundleException ex) {

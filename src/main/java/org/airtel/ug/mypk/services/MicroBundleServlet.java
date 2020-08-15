@@ -16,7 +16,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.processors.RequestProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.controllers.MenuController;
 import org.airtel.ug.mypk.pojo.MenuItem;
@@ -159,7 +159,7 @@ public class MicroBundleServlet extends HttpServlet {
 
                             LOGGER.log(Level.INFO, "EXECUTE-REQUEST: {0}", microBundleRequest);
 
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            RequestProcessor microBundleRequestProcessor = new RequestProcessor(microBundleRequest, menuItem);
                             microBundleRequestProcessor.run();
 
                         } catch (Exception ex) {
@@ -261,7 +261,7 @@ public class MicroBundleServlet extends HttpServlet {
 
                             LOGGER.log(Level.INFO, "RUNNING-REQUEST: {0}", microBundleRequest);
 
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            RequestProcessor microBundleRequestProcessor = new RequestProcessor(microBundleRequest, menuItem);
 
                             LOGGER.log(Level.INFO, "PROCESSING >>> {0}", microBundleRequestProcessor);
 
@@ -309,7 +309,7 @@ public class MicroBundleServlet extends HttpServlet {
 
                             LOGGER.log(Level.INFO, "RUNNING-REQUEST: {0}", microBundleRequest);
 
-                            MicroBundleRequestProcessor microBundleRequestProcessor = new MicroBundleRequestProcessor(microBundleRequest, menuItem);
+                            RequestProcessor microBundleRequestProcessor = new RequestProcessor(microBundleRequest, menuItem);
 
                             LOGGER.log(Level.INFO, "PROCESSING >>> {0}", microBundleRequestProcessor);
 

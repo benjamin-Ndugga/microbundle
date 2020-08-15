@@ -37,9 +37,9 @@ import org.xml.sax.SAXException;
  *
  * @author Benjamin E Ndugga
  */
-public class MicroBundleBaseProcessor {
+public class BaseProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(MicroBundleBaseProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BaseProcessor.class.getName());
 
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
     public static final String OCS_SUCCESS_CODE = "405000000";
@@ -64,7 +64,7 @@ public class MicroBundleBaseProcessor {
 
     }
 
-    public MicroBundleBaseProcessor() {
+    public BaseProcessor() {
         InitialContext ctx = null;
 
         try {
@@ -99,7 +99,7 @@ public class MicroBundleBaseProcessor {
 
         try {
 
-            LOGGER.log(Level.INFO, "LOGGING_REQUEST | {0}", transactionLog.getMsisdn());
+            LOGGER.log(Level.INFO, "LOGGING-REQUEST | {0}", transactionLog);
 
             ic = new InitialContext();
 

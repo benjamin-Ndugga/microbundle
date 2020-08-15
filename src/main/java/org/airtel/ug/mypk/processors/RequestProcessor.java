@@ -21,14 +21,14 @@ import org.ibm.ws.OCSWebMethods;
  *
  * @author Benjamin E Ndugga
  */
-public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implements Runnable {
+public class RequestProcessor extends BaseProcessor implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(MicroBundleRequestProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RequestProcessor.class.getName());
 
     private final MicroBundleRequest microBundleRequest;
     private final MenuItem menuItem;
 
-    public MicroBundleRequestProcessor(MicroBundleRequest microBundleRequest, MenuItem menuItem) {
+    public RequestProcessor(MicroBundleRequest microBundleRequest, MenuItem menuItem) {
         this.microBundleRequest = microBundleRequest;
         this.menuItem = menuItem;
 

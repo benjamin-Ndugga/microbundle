@@ -20,7 +20,7 @@ import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.controllers.MenuController;
 import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.controllers.CacheController;
-import org.airtel.ug.mypk.processors.MicroBundleRequestProcessor;
+import org.airtel.ug.mypk.processors.RequestProcessor;
 
 /**
  *
@@ -195,7 +195,7 @@ public class RestfulClient {
 
                 responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                // new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                // new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
                 return responseTxt;
 
             }
@@ -375,7 +375,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    //new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
+                    //new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI,null)).start();
                     return responseTxt;
 
                 } else {
@@ -386,7 +386,7 @@ public class RestfulClient {
 
                     responseTxt += "Your request is being processed. Please wait for confirmation SMS.";
 
-                    //new Thread(new MicroBundleRequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
+                    //new Thread(new RequestProcessor(MSISDN, SESSIONID, optionId, src, IMSI, INPUT)).start();
                     return responseTxt;
                 }
 

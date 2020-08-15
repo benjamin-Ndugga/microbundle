@@ -15,9 +15,9 @@ import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.controllers.MenuController;
 import org.airtel.ug.mypk.pojo.MenuItem;
 import org.airtel.ug.mypk.pojo.MicroBundleRetryRequest;
-import static org.airtel.ug.mypk.processors.MicroBundleBaseProcessor.MOBIQUITY_SUCCESS_CODE;
-import static org.airtel.ug.mypk.processors.MicroBundleBaseProcessor.OCS_OPERATOR_ID;
-import static org.airtel.ug.mypk.processors.MicroBundleBaseProcessor.OCS_SUCCESS_CODE;
+import static org.airtel.ug.mypk.processors.BaseProcessor.MOBIQUITY_SUCCESS_CODE;
+import static org.airtel.ug.mypk.processors.BaseProcessor.OCS_OPERATOR_ID;
+import static org.airtel.ug.mypk.processors.BaseProcessor.OCS_SUCCESS_CODE;
 import org.airtel.ug.mypk.retry.MicroBundleRetryRequestFileHandler;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.ibm.ws.OCSWebMethods;
@@ -26,7 +26,7 @@ import org.ibm.ws.OCSWebMethods;
  *
  * @author Benjamin E Ndugga
  */
-public class MicroBundleRetryProcessor extends MicroBundleBaseProcessor implements Runnable {
+public class MicroBundleRetryProcessor extends BaseProcessor implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(MicroBundleRetryProcessor.class.getName());
 
