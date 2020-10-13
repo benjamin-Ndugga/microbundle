@@ -193,8 +193,6 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
                     microBundleRetryRequest.setOptionId(optionId);
                     microBundleRetryRequest.setSourceIp(sourceIp);
                     microBundleRetryRequest.setImsi(imsi);
-                    microBundleRetryRequest.setOcs_resp_code(resultHeader.getResultCode());
-                    microBundleRetryRequest.setOcs_resp_desc(resultHeader.getResultDesc());
                     microBundleRetryRequest.setBand_id(band_id);
                     microBundleRetryRequest.setBundleName(menuItem.getMenuItemName());
                     microBundleRetryRequest.setOcsProdId(menuItem.getOcsProdId());

@@ -25,12 +25,7 @@ public class MicroBundleRetryRequest implements Serializable {
     private String mobiquity_desc;
     private String mobiquity_transid;
     private String mobiquity_xml_resp;
-
     private String processing_node;
-
-    private String ocs_resp_code;
-    private String ocs_resp_desc;
-
     private String bundleName;
 
     private long file_age;
@@ -123,22 +118,6 @@ public class MicroBundleRetryRequest implements Serializable {
         this.processing_node = processing_node;
     }
 
-    public String getOcs_resp_code() {
-        return ocs_resp_code;
-    }
-
-    public void setOcs_resp_code(String ocs_resp_code) {
-        this.ocs_resp_code = ocs_resp_code;
-    }
-
-    public String getOcs_resp_desc() {
-        return ocs_resp_desc;
-    }
-
-    public void setOcs_resp_desc(String ocs_resp_desc) {
-        this.ocs_resp_desc = ocs_resp_desc;
-    }
-
     public String getImsi() {
         return imsi;
     }
@@ -200,7 +179,7 @@ public class MicroBundleRetryRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", band_id=" + band_id + ", ocsProdId=" + ocsProdId + ", amProdId=" + amProdId + ", price=" + price + ", currentRetryCount=" + currentRetryCount + ", mobiquity_code=" + mobiquity_code + ", mobiquity_desc=" + mobiquity_desc + ", mobiquity_transid=" + mobiquity_transid + ", mobiquity_xml_resp=" + mobiquity_xml_resp + ", processing_node=" + processing_node + ", ocs_resp_code=" + ocs_resp_code + ", ocs_resp_desc=" + ocs_resp_desc + ", bundleName=" + bundleName + ", file_age=" + file_age + '}';
+        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", band_id=" + band_id + ", ocsProdId=" + ocsProdId + ", amProdId=" + amProdId + ", price=" + price + ", currentRetryCount=" + currentRetryCount + ", mobiquity_code=" + mobiquity_code + ", mobiquity_desc=" + mobiquity_desc + ", mobiquity_transid=" + mobiquity_transid + ", mobiquity_xml_resp=" + mobiquity_xml_resp + ", processing_node=" + processing_node + ", bundleName=" + bundleName + ", file_age=" + file_age + '}';
     }
 
 }
