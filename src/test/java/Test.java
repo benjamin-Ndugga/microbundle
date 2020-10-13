@@ -1,4 +1,5 @@
 
+import org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 
 /*
@@ -14,9 +15,16 @@ public class Test {
 
     public static void main(String[] args) throws MyPakalastBundleException {
 
-        Integer x = 9;
-
-        System.out.println(x.toString());
+        //nteger x = 9;
+        //System.out.println(x.toString());
+        
+        String val = "118030955";
+        
+        if (!(val.equals(MicroBundleBaseProcessor.OCS_ALREADY_PROCESSED_CODE) || val.equals(MicroBundleBaseProcessor.OCS_SUCCESS_CODE))) {
+            System.out.println("send retry");
+        } else {
+            System.out.println("ignore");
+        }
     }
 
     private static void validateBillingOption(Integer input) throws MyPakalastBundleException {

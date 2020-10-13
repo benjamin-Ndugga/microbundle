@@ -4,7 +4,7 @@ package org.airtel.ug.mypk.exceptions;
  *
  * @author Benjamin
  */
-public class BundleActivationException extends Exception {
+public class BundleActivationException  extends Exception{
 
     private int resultCode;
     private String resultDesc;

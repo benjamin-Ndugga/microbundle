@@ -10,8 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +24,7 @@ import java.util.stream.Stream;
 import javax.enterprise.context.ApplicationScoped;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 /**
  *
@@ -53,7 +58,7 @@ public class MicroBundleRetryRequestFileHandler {
      */
     public void deletRetryFile(String fileName) {
 
-        LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName+FILE_EXTENSION);
+        LOGGER.log(Level.INFO, "DELETING-FILE: {0}", fileName + FILE_EXTENSION);
 
         boolean b = new File(RETRY_FILE_PATH + fileName + FILE_EXTENSION).delete();
 
@@ -93,6 +98,8 @@ public class MicroBundleRetryRequestFileHandler {
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
+
+            logRetryRequestToDB(retryRequest);
         }
     }
 
@@ -111,6 +118,7 @@ public class MicroBundleRetryRequestFileHandler {
             List<MicroBundleRetryRequest> list = filesStream
                     .filter((Path path) -> {
                         try {
+                            //get all files that have aged out
                             BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
 
                             Instant lastModifiedTime = attributes.lastModifiedTime().toInstant();
@@ -132,11 +140,19 @@ public class MicroBundleRetryRequestFileHandler {
                 ObjectInputStream oi = null;
                 try {
 
+                    //compute the file age
+                    BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
+                    Instant lastModifiedTime = attributes.lastModifiedTime().toInstant();
+                    Instant currentTime = Instant.now();
+                    long file_age = Duration.between(lastModifiedTime, currentTime).toMinutes();
+
+                    //parse the file into a java object
                     fi = new FileInputStream(new File(RETRY_FILE_PATH + path.getFileName()));
                     oi = new ObjectInputStream(fi);
 
                     // Read objects
                     MicroBundleRetryRequest retryRequest = (MicroBundleRetryRequest) oi.readObject();
+                    retryRequest.setFile_age(file_age);
 
                     LOGGER.log(Level.INFO, "READ-RETRY-OBJECT: {0}", retryRequest.toString());
 
@@ -160,7 +176,8 @@ public class MicroBundleRetryRequestFileHandler {
                         LOGGER.log(Level.SEVERE, null, ex);
                     }
                 }
-            }).limit(MAX_FILE_COUNT)
+            }).sorted(Comparator.comparingLong(MicroBundleRetryRequest::getFile_age).reversed())
+                    .limit(MAX_FILE_COUNT)
                     .collect(Collectors.toList());
 
             LOGGER.log(Level.INFO, "TOTAL-FILES-TO-PROCESS: {0} ", list.size());
@@ -196,6 +213,93 @@ public class MicroBundleRetryRequestFileHandler {
                     ic.close();
                 }
             } catch (NamingException ex) {
+                LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            }
+        }
+    }
+
+    private void logRetryRequestToDB(MicroBundleRetryRequest retryRequest) {
+        Connection connection = null;
+        InitialContext ic = null;
+
+        LOGGER.log(Level.INFO, "LOG-RETRY-ENTRY {0}", retryRequest);
+        try {
+
+            ic = new InitialContext();
+            DataSource dataSource = (DataSource) ic.lookup("KIKADB");
+            connection = (Connection) dataSource.getConnection();
+
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO AIRTEL_AUTO_SETTLEMENTS ("
+                    + "MSISDN,"
+                    + "SESSION_ID,"
+                    + "EXTERNAL_ID,"
+                    + "BUNDLE_NAME,"
+                    + "RETRIES_DONE,"
+                    + "PROCESSING_NODE) "
+                    + "VALUES (?,?,?,?,?,?)");
+
+            statement.setString(1, retryRequest.getMsisdn());
+            statement.setString(2, retryRequest.getSessionId());
+            statement.setString(3, retryRequest.getExternalId());
+            statement.setString(4, retryRequest.getBundleName());
+            statement.setInt(5, retryRequest.getCurrentRetryCount()-1);//less the current reties as the 1st time is not counted
+            statement.setString(6, retryRequest.getProcessing_node());
+
+            int i = statement.executeUpdate();
+
+            LOGGER.log(Level.INFO, "LOG-RETRY-ENTRY-RESPONSE: {0}", i);
+
+            connection.commit();
+
+        } catch (Exception ex) {
+
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+                if (ic != null) {
+                    ic.close();
+                }
+            } catch (SQLException | NamingException ex) {
+                LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            }
+        }
+    }
+
+    public void deleteRetryRequest(MicroBundleRetryRequest retryRequest) {
+        Connection connection = null;
+        InitialContext ic = null;
+        try {
+            LOGGER.log(Level.INFO, "DELETE-DB-RECORD | {0}", retryRequest.getMsisdn());
+
+            ic = new InitialContext();
+            DataSource dataSource = (DataSource) ic.lookup("KIKADB");
+            connection = (Connection) dataSource.getConnection();
+
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM AIRTEL_AUTO_SETTLEMENTS WHERE EXTERNAL_ID = ?");
+
+            statement.setString(1, retryRequest.getExternalId());
+
+            int i = statement.executeUpdate();
+
+            LOGGER.log(Level.INFO, "DELETE-DB-RECORD | {0}", retryRequest.getMsisdn());
+
+            connection.commit();
+
+        } catch (SQLException | NamingException ex) {
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+                if (ic != null) {
+                    ic.close();
+                }
+            } catch (SQLException | NamingException ex) {
                 LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
             }
         }

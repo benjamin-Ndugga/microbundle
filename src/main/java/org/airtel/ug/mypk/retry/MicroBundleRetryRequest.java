@@ -9,8 +9,135 @@ import java.io.Serializable;
  */
 public class MicroBundleRetryRequest implements Serializable {
 
-    private String msisdn, sessionId, sourceIp, externalId, imsi;
-    private int optionId, currentRetryCount = 1;
+    private String msisdn;
+    private String sessionId;
+    private String sourceIp;
+    private String externalId;
+    private String imsi;
+    private int optionId;
+    private int band_id;
+    private String ocsProdId;
+    private String amProdId;
+    private int price;
+    private int currentRetryCount = 1;
+
+    private String mobiquity_code;
+    private String mobiquity_desc;
+    private String mobiquity_transid;
+    private String mobiquity_xml_resp;
+
+    private String processing_node;
+
+    private String ocs_resp_code;
+    private String ocs_resp_desc;
+
+    private String bundleName;
+
+    private long file_age;
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public String getOcsProdId() {
+        return ocsProdId;
+    }
+
+    public void setOcsProdId(String ocsProdId) {
+        this.ocsProdId = ocsProdId;
+    }
+
+    public String getAmProdId() {
+        return amProdId;
+    }
+
+    public void setAmProdId(String amProdId) {
+        this.amProdId = amProdId;
+    }
+
+    public long getFile_age() {
+        return file_age;
+    }
+
+    public void setFile_age(long file_age) {
+        this.file_age = file_age;
+    }
+
+    public String getBundleName() {
+        return bundleName;
+    }
+
+    public void setBundleName(String bundleName) {
+        this.bundleName = bundleName;
+    }
+
+    public int getBand_id() {
+        return band_id;
+    }
+
+    public void setBand_id(int band_id) {
+        this.band_id = band_id;
+    }
+
+    public String getMobiquity_code() {
+        return mobiquity_code;
+    }
+
+    public void setMobiquity_code(String mobiquity_code) {
+        this.mobiquity_code = mobiquity_code;
+    }
+
+    public String getMobiquity_desc() {
+        return mobiquity_desc;
+    }
+
+    public void setMobiquity_desc(String mobiquity_desc) {
+        this.mobiquity_desc = mobiquity_desc;
+    }
+
+    public String getMobiquity_transid() {
+        return mobiquity_transid;
+    }
+
+    public void setMobiquity_transid(String mobiquity_transid) {
+        this.mobiquity_transid = mobiquity_transid;
+    }
+
+    public String getMobiquity_xml_resp() {
+        return mobiquity_xml_resp;
+    }
+
+    public void setMobiquity_xml_resp(String mobiquity_xml_resp) {
+        this.mobiquity_xml_resp = mobiquity_xml_resp;
+    }
+
+    public String getProcessing_node() {
+        return processing_node;
+    }
+
+    public void setProcessing_node(String processing_node) {
+        this.processing_node = processing_node;
+    }
+
+    public String getOcs_resp_code() {
+        return ocs_resp_code;
+    }
+
+    public void setOcs_resp_code(String ocs_resp_code) {
+        this.ocs_resp_code = ocs_resp_code;
+    }
+
+    public String getOcs_resp_desc() {
+        return ocs_resp_desc;
+    }
+
+    public void setOcs_resp_desc(String ocs_resp_desc) {
+        this.ocs_resp_desc = ocs_resp_desc;
+    }
 
     public String getImsi() {
         return imsi;
@@ -73,10 +200,7 @@ public class MicroBundleRetryRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", currentRetryCount=" + currentRetryCount + '}';
+        return "MicroBundleRetryRequest{" + "msisdn=" + msisdn + ", sessionId=" + sessionId + ", sourceIp=" + sourceIp + ", externalId=" + externalId + ", imsi=" + imsi + ", optionId=" + optionId + ", band_id=" + band_id + ", ocsProdId=" + ocsProdId + ", amProdId=" + amProdId + ", price=" + price + ", currentRetryCount=" + currentRetryCount + ", mobiquity_code=" + mobiquity_code + ", mobiquity_desc=" + mobiquity_desc + ", mobiquity_transid=" + mobiquity_transid + ", mobiquity_xml_resp=" + mobiquity_xml_resp + ", processing_node=" + processing_node + ", ocs_resp_code=" + ocs_resp_code + ", ocs_resp_desc=" + ocs_resp_desc + ", bundleName=" + bundleName + ", file_age=" + file_age + '}';
     }
-
-    
-    
 
 }

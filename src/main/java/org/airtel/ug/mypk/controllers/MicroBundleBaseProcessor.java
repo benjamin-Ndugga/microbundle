@@ -1,5 +1,8 @@
 package org.airtel.ug.mypk.controllers;
 
+import com.huawei.www.bme.cbsinterface.cbs.businessmgr.SubscribeAppendantProductRequestProduct;
+import com.huawei.www.bme.cbsinterface.cbs.businessmgr.ValidMode;
+import com.huawei.www.bme.cbsinterface.common.ResultHeader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,11 +11,10 @@ import java.io.StringReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
@@ -21,14 +23,17 @@ import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.rpc.ServiceException;
 import org.airtel.ug.mypk.am.MobiquityReponseHandler;
 import org.airtel.ug.mypk.exceptions.DebitAccountException;
+import org.airtel.ug.mypk.exceptions.SubscribeBundleException;
 import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.pojo.RequestLog;
 import org.airtel.ug.mypk.util.HostNameVerifier;
 import org.airtel.ug.mypk.util.SMSClient;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.ibm.ws.OCSWebMethods;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -42,7 +47,7 @@ public class MicroBundleBaseProcessor {
 
     public static final String MOBIQUITY_SUCCESS_CODE = "200";
     public static final String OCS_SUCCESS_CODE = "405000000";
-
+    public static final String OCS_ALREADY_PROCESSED_CODE = "118030955";
     public static final String OCS_OPERATOR_ID = "MicroBundle";
 
     public String OCS_IP, OCS_PORT;
@@ -202,6 +207,8 @@ public class MicroBundleBaseProcessor {
             String MBQT_PASSWORD = (String) ic.lookup("resource/am/pass");
 
             LOGGER.log(Level.INFO, "AM_IP_PORT {0} | {1}", new Object[]{AM_IP_PORT, msisdn});
+
+            LOGGER.log(Level.INFO, "PUSHING-DEBIT-REQUEST | {0}", msisdn);
 
             String charset = "UTF-8";
 
@@ -379,6 +386,45 @@ public class MicroBundleBaseProcessor {
             } catch (IOException | NamingException ex) {
                 LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
             }
+        }
+    }
+    /**
+     * 
+     * @param productId
+     * @param msisdn
+     * @param internalSessionId
+     * @param operatorId
+     * @return
+     * @throws SubscribeBundleException 
+     */
+
+    public final ResultHeader subscribePakalastBundle(String productId, String msisdn, String internalSessionId, String operatorId) throws SubscribeBundleException {
+        try {
+
+            LOGGER.log(Level.INFO, "SENDING-REQUEST-OCS | {0}", msisdn);
+
+            //append the product to zero-rental 
+            //send request OCS
+            SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
+            prod1.setId(productId);
+            prod1.setValidMode(ValidMode.value1);
+
+            SubscribeAppendantProductRequestProduct[] productList = {prod1};
+
+            OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
+            requestLog.setRequestSerial(internalSessionId);
+
+            ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, operatorId, internalSessionId).getResultHeader();
+
+            requestLog.setOcsResp(resultHeader.getResultCode());
+            requestLog.setOcsDesc(resultHeader.getResultDesc());
+
+            LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
+            LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
+
+            return resultHeader;
+        } catch (RemoteException | ServiceException ex) {
+            throw new SubscribeBundleException("OCS: " + ex.getLocalizedMessage());
         }
     }
 }

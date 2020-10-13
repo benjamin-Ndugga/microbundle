@@ -15,7 +15,6 @@ import static org.airtel.ug.mypk.controllers.MicroBundleBaseProcessor.OCS_SUCCES
 import org.airtel.ug.mypk.exceptions.DebitAccountException;
 import org.airtel.ug.mypk.exceptions.MyPakalastBundleException;
 import org.airtel.ug.mypk.exceptions.SubscribeBundleException;
-import org.airtel.ug.mypk.exceptions.TransactionStatusException;
 import org.airtel.ug.mypk.menu.MenuHandler;
 import org.airtel.ug.mypk.menu.MenuItem;
 import org.airtel.ug.mypk.retry.MicroBundleRetryRequest;
@@ -38,22 +37,6 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
     private final Integer optionId;
 
     private String pin = null;
-    private MicroBundleRetryRequest retryRequest = null;
-
-    public MicroBundleRequestProcessor(MicroBundleRetryRequest retryRequest) {
-        this.retryRequest = retryRequest;
-
-        this.msisdn = retryRequest.getMsisdn();
-        this.sessionId = retryRequest.getSessionId();
-        this.sourceIp = retryRequest.getSourceIp();
-        this.optionId = retryRequest.getOptionId();
-
-        this.imsi = retryRequest.getImsi();
-
-        requestLog.setChannel("RETRY");
-
-        LOGGER.log(Level.INFO, "REQUEST-SENT-FROM {0} | {1}", new Object[]{sourceIp, msisdn});
-    }
 
     public MicroBundleRequestProcessor(String msisdn, String sessionId, int optionId, String sourceIp, String imsi, String pin) {
 
@@ -155,6 +138,9 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
         MicroBundleHzClient hzClient = new MicroBundleHzClient();
         String internalSessionId = null;
+        int band_id = 10;//by default
+        MenuItem menuItem = null;
+        ResultHeader resultHeader = null;
         try {
 
             requestLog.setMsisdn(msisdn);
@@ -166,13 +152,13 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
 
             //get the band for this customer
-            int band_id = hzClient.getBand(msisdn);
+            band_id = hzClient.getBand(msisdn);
 
             requestLog.setBand_id(band_id);
 
             LOGGER.log(Level.INFO, "LOOKUP-MENU-ID-VALUE {0} | {1}", new Object[]{optionId, msisdn});
 
-            MenuItem menuItem = new MenuHandler().getMenuItem(band_id, optionId);
+            menuItem = new MenuHandler().getMenuItem(band_id, optionId);
 
             requestLog.setOcsProdID(menuItem.getOcsProdId());
             requestLog.setAmProdId(menuItem.getAmProdId());
@@ -193,24 +179,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
                 LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getAmProdId(), msisdn});
 
-                //append the product to zero-rental 
-                //send request OCS
-                SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
-                prod1.setId(menuItem.getAmProdId());
-                prod1.setValidMode(ValidMode.value1);
-
-                SubscribeAppendantProductRequestProduct[] productList = {prod1};
-
-                OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
-                requestLog.setRequestSerial(internalSessionId);
-
-                ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN", internalSessionId).getResultHeader();
-
-                requestLog.setOcsResp(resultHeader.getResultCode());
-                requestLog.setOcsDesc(resultHeader.getResultDesc());
-
-                LOGGER.log(Level.INFO, "OCS_RESP_DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
-                LOGGER.log(Level.INFO, "OCS_RESP_CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
+                resultHeader = subscribePakalastBundle(menuItem.getAmProdId(), msisdn, internalSessionId, OCS_OPERATOR_ID + "_ATL_MN");
 
                 //send subscription failure message
                 if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
@@ -224,6 +193,19 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
                     microBundleRetryRequest.setOptionId(optionId);
                     microBundleRetryRequest.setSourceIp(sourceIp);
                     microBundleRetryRequest.setImsi(imsi);
+                    microBundleRetryRequest.setOcs_resp_code(resultHeader.getResultCode());
+                    microBundleRetryRequest.setOcs_resp_desc(resultHeader.getResultDesc());
+                    microBundleRetryRequest.setBand_id(band_id);
+                    microBundleRetryRequest.setBundleName(menuItem.getMenuItemName());
+                    microBundleRetryRequest.setOcsProdId(menuItem.getOcsProdId());
+                    microBundleRetryRequest.setAmProdId(menuItem.getAmProdId());
+                    microBundleRetryRequest.setPrice(menuItem.getPrice());
+                    microBundleRetryRequest.setProcessing_node(requestLog.getProcessingNode());
+
+                    microBundleRetryRequest.setMobiquity_code(mbqtResp.getTxnstatus());
+                    microBundleRetryRequest.setMobiquity_desc(mbqtResp.getMessage());
+                    microBundleRetryRequest.setMobiquity_transid(mbqtResp.getTxnid());
+                    microBundleRetryRequest.setMobiquity_xml_resp(requestLog.getMobiquity_xml_resp());
 
                     new MicroBundleRetryRequestFileHandler()
                             .writeRetryTransaction(microBundleRetryRequest);
@@ -240,7 +222,7 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
 
             LOGGER.log(Level.INFO, ex.getLocalizedMessage() + " | " + msisdn, ex);
 
-        } catch (DebitAccountException | ServiceException | RemoteException ex) {
+        } catch (SubscribeBundleException ex) {
 
             SMSClient.send_sms(msisdn, "Your request is being processed at the moment, please wait for a confirmation sms.");
 
@@ -249,152 +231,63 @@ public class MicroBundleRequestProcessor extends MicroBundleBaseProcessor implem
             requestLog.setException_str(ex.getLocalizedMessage());
 
             MicroBundleRetryRequest microBundleRetryRequest = new MicroBundleRetryRequest();
+
             microBundleRetryRequest.setMsisdn(msisdn);
             microBundleRetryRequest.setSessionId(sessionId);
             microBundleRetryRequest.setExternalId(internalSessionId);
             microBundleRetryRequest.setOptionId(optionId);
             microBundleRetryRequest.setSourceIp(sourceIp);
             microBundleRetryRequest.setImsi(imsi);
+            microBundleRetryRequest.setBand_id(band_id);
+            microBundleRetryRequest.setBundleName(menuItem.getMenuItemName());
+            microBundleRetryRequest.setOcsProdId(menuItem.getOcsProdId());
+            microBundleRetryRequest.setAmProdId(menuItem.getAmProdId());
+            microBundleRetryRequest.setPrice(menuItem.getPrice());
+            microBundleRetryRequest.setProcessing_node(requestLog.getProcessingNode());
+
+            microBundleRetryRequest.setMobiquity_code(requestLog.getMobiquity_code());
+            microBundleRetryRequest.setMobiquity_desc(requestLog.getMobiquity_desc());
+            microBundleRetryRequest.setMobiquity_transid(requestLog.getMobiquity_transid());
+            microBundleRetryRequest.setMobiquity_xml_resp(requestLog.getMobiquity_xml_resp());
+
+            new MicroBundleRetryRequestFileHandler()
+                    .writeRetryTransaction(microBundleRetryRequest);
+
+        } catch (DebitAccountException ex) {
+
+            SMSClient.send_sms(msisdn, "Your request is being processed at the moment, please wait for a confirmation sms.");
+
+            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage() + " | " + msisdn, ex);
+
+            requestLog.setException_str(ex.getLocalizedMessage());
+
+            MicroBundleRetryRequest microBundleRetryRequest = new MicroBundleRetryRequest();
+            
+            microBundleRetryRequest.setMsisdn(msisdn);
+            microBundleRetryRequest.setSessionId(sessionId);
+            microBundleRetryRequest.setExternalId(internalSessionId);
+            microBundleRetryRequest.setOptionId(optionId);
+            microBundleRetryRequest.setSourceIp(sourceIp);
+            microBundleRetryRequest.setImsi(imsi);
+            microBundleRetryRequest.setBand_id(band_id);
+            microBundleRetryRequest.setBundleName(menuItem.getMenuItemName());
+            microBundleRetryRequest.setOcsProdId(menuItem.getOcsProdId());
+            microBundleRetryRequest.setAmProdId(menuItem.getAmProdId());
+            microBundleRetryRequest.setPrice(menuItem.getPrice());
+            microBundleRetryRequest.setProcessing_node(requestLog.getProcessingNode());
 
             new MicroBundleRetryRequestFileHandler()
                     .writeRetryTransaction(microBundleRetryRequest);
 
         } finally {
-
-            logRequest();
-
-            //clear session data
-            //hzClient.clearSessionData(msisdn);
-        }
-
-    }
-
-    private void processRetryRequest() {
-
-        String externalId = retryRequest.getExternalId();
-
-        requestLog.setMsisdn(msisdn);
-        requestLog.setOptionId(optionId);
-        requestLog.setSessionid(sessionId);
-        requestLog.setRequestIp(sourceIp);
-        requestLog.setImsi(imsi);
-        requestLog.setExt_transid(externalId);
-
-        try {
-            LOGGER.log(Level.INFO, "PROCESS-RETRY-REQUEST | {0}", msisdn);
-
-            //delete file from the filesystem
-            new MicroBundleRetryRequestFileHandler().deletRetryFile(externalId);
-
-            LOGGER.log(Level.INFO, "LOOKUP-CUSTOMER-BAND | {0}", msisdn);
-
-            //get the band for this customer
-            int band_id = new MicroBundleHzClient().getBand(msisdn);
-
-            requestLog.setBand_id(band_id);
-
-            LOGGER.log(Level.INFO, "LOOKUP-MENU-ID-VALUE {0} | {1}", new Object[]{optionId, msisdn});
-
-            MenuItem menuItem = new MenuHandler().getMenuItem(band_id, optionId);
-
-            requestLog.setOcsProdID(menuItem.getOcsProdId());
-            requestLog.setAmProdId(menuItem.getAmProdId());
-            requestLog.setPrice(menuItem.getPrice());
-
-            LOGGER.log(Level.INFO, "MENU-FOUND: {0} | {1}", new Object[]{menuItem.printLogFormat(), msisdn});
-
-            //check from AM if this external is present
-            MobiquityReponseHandler mobiquityReponseHandler = inquireTransactionStatusOfExtId(externalId, msisdn);
-
-            if (mobiquityReponseHandler.getTxnstatus().equals(MOBIQUITY_SUCCESS_CODE)) {
-
-                try {
-                    //init ocs client object
-                    OCSWebMethods ocs = new OCSWebMethods(OCS_IP, OCS_PORT);
-
-                    LOGGER.log(Level.INFO, "SETTING-PROD-ID: {0} | {1}", new Object[]{menuItem.getAmProdId(), msisdn});
-
-                    SubscribeAppendantProductRequestProduct prod1 = new SubscribeAppendantProductRequestProduct();
-                    prod1.setId(menuItem.getAmProdId());
-                    prod1.setValidMode(ValidMode.value1);
-
-                    SubscribeAppendantProductRequestProduct[] productList = {prod1};
-
-                    requestLog.setRequestSerial(externalId);
-
-                    ResultHeader resultHeader = ocs.subscribeAppendantProduct(msisdn.substring(3), productList, OCS_OPERATOR_ID + "_ATL_MN", externalId).getResultHeader();
-
-                    requestLog.setOcsResp(resultHeader.getResultCode());
-                    requestLog.setOcsDesc(resultHeader.getResultDesc());
-
-                    LOGGER.log(Level.INFO, "OCS-RESP-DESC {0} | {1}", new Object[]{resultHeader.getResultDesc(), msisdn});
-                    LOGGER.log(Level.INFO, "OCS-RESP-CODE {0} | {1}", new Object[]{resultHeader.getResultCode(), msisdn});
-
-                    //send subscription failure message
-                    if (!resultHeader.getResultCode().equals(OCS_SUCCESS_CODE)) {
-
-                        LOGGER.log(Level.INFO, "SENDING-FOR-RETRY | {0}", msisdn);
-
-                        int currentRetryCount = retryRequest.getCurrentRetryCount();
-
-                        if (currentRetryCount < MAX_RETRY_COUNT) {
-
-                            retryRequest.setCurrentRetryCount(++currentRetryCount);
-
-                            new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
-                        } else {
-                            SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Trasaction Id " + retryRequest.getExternalId());
-                        }
-
-                    }
-
-                } catch (RemoteException | ServiceException ex) {
-                    throw new SubscribeBundleException("OCS: " + ex.getLocalizedMessage());
-                }
-
-            } else {
-                //send failure sms
-                //SMSClient.send_sms(msisdn, mobiquityReponseHandler.getMessage());
-                SMSClient.send_sms(msisdn, "Dear customer you request for " + menuItem.getMenuItemName() + " failed to be processed.");
-            }
-
-        } catch (SubscribeBundleException | TransactionStatusException | MyPakalastBundleException ex) {
-
-            /**
-             * in this section push retry request to the queue for another
-             * attempt incase any of these exceptions are thrown.
-             *
-             */
-            LOGGER.log(Level.SEVERE, ex.getLocalizedMessage() + " | " + msisdn, ex);
-
-            requestLog.setException_str(ex.getLocalizedMessage());
-
-            /**
-             * if the current retry count is higher than 0
-             */
-            int currentRetryCount = retryRequest.getCurrentRetryCount();
-
-            if (currentRetryCount < MAX_RETRY_COUNT) {
-
-                retryRequest.setCurrentRetryCount(++currentRetryCount);
-
-                new MicroBundleRetryRequestFileHandler().writeRetryTransaction(retryRequest);
-            } else {
-                SMSClient.send_sms(msisdn, "Dear Customer, your request failed to be processed, please contact our customer care services.Transaction Id: " + retryRequest.getExternalId());
-            }
-
-        } finally {
             logRequest();
         }
-
     }
 
     @Override
     public void run() {
         if (pin != null) {
             subscribeViaAirtelMoney();
-        } else if (retryRequest != null) {
-            processRetryRequest();
         } else {
             subscribeViaAirtime();
         }
